@@ -11,7 +11,6 @@ export function RSVPSection() {
     phone: "",
     guests: "1",
     attendance: "yes",
-    dietary: "",
     message: "",
   })
 
@@ -148,20 +147,6 @@ export function RSVPSection() {
                 <span className="text-foreground">Infelizmente não poderei ir</span>
               </label>
             </div>
-          </div>
-
-          <div>
-            <label htmlFor="dietary" className="block text-sm font-medium text-foreground mb-2">
-              Restrições Alimentares
-            </label>
-            <input
-              type="text"
-              id="dietary"
-              value={formData.dietary}
-              onChange={(e) => setFormData({ ...formData, dietary: e.target.value })}
-              className="w-full px-4 py-3 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
-              placeholder="Vegetariano, vegano, intolerâncias, etc."
-            />
           </div>
 
           <div>

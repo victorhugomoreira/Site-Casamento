@@ -5,7 +5,7 @@ export function Footer() {
     <footer className="py-12 bg-primary text-primary-foreground">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h2 className="font-[family-name:var(--font-great-vibes)] text-4xl md:text-5xl mb-4">
-          Bruna & Victor
+          Bruna & Victor Hugo
         </h2>
         
         <p className="text-primary-foreground/80 mb-6">
