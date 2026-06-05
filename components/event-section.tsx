@@ -115,14 +115,6 @@ export function EventSection() {
             </div>
           </div>
         </div>
-
-        {/* Dress Code */}
-        <div className="mt-16 text-center">
-          <h3 className="text-xl font-medium text-foreground mb-4">Dress Code</h3>
-          <p className="text-muted-foreground">
-            Traje Esporte Fino | Evite branco, creme e tons claros
-          </p>
-        </div>
       </div>
     </section>
   )
