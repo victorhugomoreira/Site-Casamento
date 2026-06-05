@@ -5,10 +5,6 @@ import { ChevronDown } from "lucide-react"
 
 const faqs = [
   {
-    question: "Qual é o dress code do casamento?",
-    answer: "O traje é Esporte Fino. Pedimos gentilmente que evitem branco, creme e tons muito claros, pois são reservados para a noiva."
-  },
-  {
     question: "Posso levar acompanhante?",
     answer: "Os convites são individuais e nominais. Caso você tenha sido convidado com acompanhante, isso estará indicado no seu convite. Em caso de dúvidas, entre em contato conosco."
   },
@@ -58,12 +54,24 @@ export function FAQSection() {
           </p>
         </div>
 
+        {/* Traje Card */}
+        <div className="bg-card rounded-lg p-8 mb-8 shadow-sm border border-border">
+          <div className="text-center">
+            <h3 className="text-2xl font-semibold text-foreground mb-4">Traje</h3>
+            <div className="w-16 h-0.5 bg-primary mx-auto mb-6" />
+            <p className="text-lg text-foreground mb-2">Esporte Fino</p>
+            <p className="text-muted-foreground text-sm max-w-md mx-auto">
+              Pedimos gentilmente que evitem branco, creme e tons muito claros, pois são reservados para a noiva.
+            </p>
+          </div>
+        </div>
+
         {/* FAQ Accordion */}
         <div className="space-y-4">
           {faqs.map((faq, index) => (
             <div
               key={index}
-              className="bg-card rounded-lg overflow-hidden shadow-sm"
+              className="bg-card rounded-lg overflow-hidden shadow-sm border border-border"
             >
               <button
                 onClick={() => toggleFAQ(index)}

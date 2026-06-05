@@ -1,23 +1,28 @@
 "use client"
 
-import { Gift, Home, Plane, CreditCard, Copy, Check } from "lucide-react"
+import { Gift, Copy, Check } from "lucide-react"
 import { useState } from "react"
+import Image from "next/image"
+import Link from "next/link"
 
-const giftCategories = [
+const featuredGifts = [
   {
-    icon: Home,
-    title: "Nosso Lar",
-    description: "Ajude-nos a construir nosso novo lar com itens para casa",
+    id: 1,
+    name: "Jogo de Panelas",
+    image: "/images/gifts/jogo-panelas.png",
+    price: 890,
   },
   {
-    icon: Plane,
-    title: "Lua de Mel",
-    description: "Contribua para a viagem dos nossos sonhos",
+    id: 2,
+    name: "Jogo de Cama",
+    image: "/images/gifts/jogo-cama.png",
+    price: 450,
   },
   {
-    icon: CreditCard,
-    title: "Presente em Dinheiro",
-    description: "Sua contribuição será muito bem-vinda",
+    id: 3,
+    name: "Cafeteira Expresso",
+    image: "/images/gifts/cafeteira.png",
+    price: 1200,
   },
 ]
 
@@ -34,7 +39,7 @@ export function GiftsSection() {
 
   return (
     <section id="presentes" className="py-20 md:py-32 bg-background">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="font-[family-name:var(--font-great-vibes)] text-5xl md:text-6xl text-primary mb-4">
@@ -46,29 +51,53 @@ export function GiftsSection() {
           </p>
         </div>
 
-        {/* Gift Categories */}
-        <div className="grid md:grid-cols-3 gap-6 mb-12">
-          {giftCategories.map((category) => (
+        {/* Featured Gifts */}
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
+          {featuredGifts.map((gift) => (
             <div
-              key={category.title}
-              className="bg-card rounded-lg p-6 text-center shadow-sm hover:shadow-md transition-shadow"
+              key={gift.id}
+              className="bg-card rounded-lg overflow-hidden shadow-sm border border-border hover:shadow-md transition-shadow"
             >
-              <category.icon className="w-12 h-12 text-primary mx-auto mb-4" />
-              <h3 className="text-xl font-medium text-foreground mb-2">{category.title}</h3>
-              <p className="text-muted-foreground text-sm">{category.description}</p>
+              <div className="aspect-square relative bg-secondary">
+                <Image
+                  src={gift.image}
+                  alt={gift.name}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              <div className="p-4">
+                <h3 className="text-lg font-medium text-foreground mb-1">{gift.name}</h3>
+                <p className="text-primary font-semibold text-xl mb-4">
+                  R$ {gift.price.toLocaleString('pt-BR')}
+                </p>
+                <button className="w-full bg-primary text-primary-foreground py-2.5 px-4 rounded-md hover:bg-accent transition-colors font-medium">
+                  Presentear
+                </button>
+              </div>
             </div>
           ))}
         </div>
 
+        {/* Ver Mais Button */}
+        <div className="text-center mb-16">
+          <Link
+            href="/presentes"
+            className="inline-block bg-primary text-primary-foreground py-3 px-8 rounded-md hover:bg-accent transition-colors font-medium"
+          >
+            Ver todos os presentes
+          </Link>
+        </div>
+
         {/* PIX Section */}
-        <div className="bg-card rounded-lg p-8 text-center shadow-sm">
+        <div className="bg-card rounded-lg p-8 text-center shadow-sm border border-border max-w-xl mx-auto">
           <Gift className="w-12 h-12 text-primary mx-auto mb-4" />
           <h3 className="text-2xl font-medium text-foreground mb-4">PIX</h3>
           <p className="text-muted-foreground mb-6">
             Se preferir, você pode fazer uma transferência via PIX
           </p>
           
-          <div className="flex items-center justify-center gap-3 bg-secondary rounded-lg p-4 max-w-md mx-auto">
+          <div className="flex items-center justify-center gap-3 bg-secondary rounded-lg p-4">
             <code className="text-foreground text-sm md:text-base flex-1 truncate">
               {pixKey}
             </code>
@@ -89,11 +118,6 @@ export function GiftsSection() {
             <p className="text-primary text-sm mt-2">Chave PIX copiada!</p>
           )}
         </div>
-
-        {/* Note */}
-        <p className="text-center text-muted-foreground mt-8 text-sm">
-          * Em breve disponibilizaremos nossa lista completa de presentes
-        </p>
       </div>
     </section>
   )
