@@ -92,47 +92,6 @@ const categories: Category[] = [
       },
     ],
   },
-  {
-    title: "Aluguel de Vestidos e Ternos",
-    places: [
-      {
-        name: "Atelier Elegance",
-        description: "Vestidos de festa e madrinhas para aluguel, com ajustes personalizados.",
-        address: "R. Dom Aquino, 1500 - Centro, Campo Grande - MS",
-        phone: "+55 67 99777-5678",
-        instagram: "atelierelegance",
-        mapsUrl: "https://maps.google.com/?q=Atelier+Elegance+Campo+Grande",
-      },
-      {
-        name: "Homem Elegante Ternos",
-        description: "Aluguel e venda de ternos e trajes sociais masculinos com ótimo caimento.",
-        address: "Av. Afonso Pena, 3000 - Jardim dos Estados, Campo Grande - MS",
-        phone: "+55 67 99666-8765",
-        instagram: "homemeleganteternos",
-        mapsUrl: "https://maps.google.com/?q=Ternos+Campo+Grande",
-      },
-    ],
-  },
-  {
-    title: "Comportamento",
-    places: [
-      {
-        name: "Chegue com Antecedência",
-        description:
-          "Pedimos que cheguem com pelo menos 30 minutos de antecedência para a cerimônia, garantindo que tudo comece no horário previsto.",
-      },
-      {
-        name: "Durante a Cerimônia",
-        description:
-          "É um momento de recolhimento e emoção. Pedimos silêncio, celulares no modo silencioso e que evitem fotos durante a celebração religiosa.",
-      },
-      {
-        name: "Na Festa",
-        description:
-          "Aproveitem, dancem e celebrem conosco! Sintam-se em casa para registrar todos os momentos e compartilhar a alegria da noite.",
-      },
-    ],
-  },
 ]
 
 function PlaceCard({ place }: { place: Place }) {

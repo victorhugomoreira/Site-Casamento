@@ -70,8 +70,8 @@ export function EventSection() {
           <div className="bg-card rounded-lg overflow-hidden shadow-sm">
             <div className="relative aspect-[16/10]">
               <Image
-                src="/images/reception.png"
-                alt="Local da Festa"
+                src="/images/arya-eventos.jpg"
+                alt="Arya Eventos"
                 fill
                 className="object-cover"
               />
