@@ -64,15 +64,7 @@ export function OurStorySection() {
           </div>
         </div>
 
-        {/* Quote */}
-        <div className="mt-20 text-center max-w-3xl mx-auto">
-          <blockquote className="font-[family-name:var(--font-great-vibes)] text-3xl md:text-4xl text-primary/80 leading-relaxed">
-            {'"'}O amor não consiste em olhar um para o outro, mas sim em olhar juntos para a mesma direção.{'"'}
-          </blockquote>
-          <cite className="block mt-4 text-sm text-muted-foreground tracking-widest uppercase">
-            — Antoine de Saint-Exupéry
-          </cite>
-        </div>
+
       </div>
     </section>
   )
