@@ -21,8 +21,8 @@ export function EventSection() {
           <div className="bg-card rounded-lg overflow-hidden shadow-sm">
             <div className="relative aspect-[16/10]">
               <Image
-                src="/images/ceremony.png"
-                alt="Local da Cerimônia"
+                src="/images/capela-salesiana.jpg"
+                alt="Capela Salesiana São Francisco de Sales"
                 fill
                 className="object-cover"
               />
