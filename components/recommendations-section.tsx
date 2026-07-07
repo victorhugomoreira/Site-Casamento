@@ -20,6 +20,22 @@ type Category = {
   places: Place[]
 }
 
+const COUPON = "VIDA DE NOIVA"
+
+function highlightCoupon(text: string) {
+  const parts = text.split(COUPON)
+  return parts.map((part, i) => (
+    <span key={i}>
+      {part}
+      {i < parts.length - 1 && (
+        <span className="inline-block rounded-md bg-primary/15 px-2 py-0.5 font-semibold text-primary tracking-wide">
+          {COUPON}
+        </span>
+      )}
+    </span>
+  ))
+}
+
 const categories: Category[] = [
   {
     title: "Hospedagem",
@@ -236,7 +252,7 @@ export function RecommendationsSection() {
                     <div className="px-6 pt-2 space-y-3">
                       {category.intro.map((paragraph, p) => (
                         <p key={p} className="text-sm text-foreground/80 leading-relaxed">
-                          {paragraph}
+                          {highlightCoupon(paragraph)}
                         </p>
                       ))}
                     </div>
@@ -250,7 +266,7 @@ export function RecommendationsSection() {
                     <div className="px-6 pb-6">
                       <div className="flex items-start gap-3 rounded-lg border border-primary/30 bg-secondary/60 p-4">
                         <Info className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                        <p className="text-sm text-foreground/80 leading-relaxed">{category.note}</p>
+                        <p className="text-sm text-foreground/80 leading-relaxed">{highlightCoupon(category.note)}</p>
                       </div>
                     </div>
                   )}
