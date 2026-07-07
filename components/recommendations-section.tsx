@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronDown, MapPin, Phone, Instagram } from "lucide-react"
+import { ChevronDown, MapPin, Phone, AtSign } from "lucide-react"
 
 type Place = {
   name: string
@@ -140,7 +140,7 @@ function PlaceCard({ place }: { place: Place }) {
             rel="noopener noreferrer"
             className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
           >
-            <Instagram className="w-4 h-4 text-primary shrink-0" />
+            <AtSign className="w-4 h-4 text-primary shrink-0" />
             <span>@{place.instagram}</span>
           </a>
         )}
