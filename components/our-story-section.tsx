@@ -25,42 +25,28 @@ export function OurStorySection() {
             />
           </div>
 
-          <div className="space-y-8">
-            <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                <span className="w-12 h-px bg-primary/40" />
-                <span className="text-sm text-primary tracking-widest uppercase">O Início</span>
-              </div>
-              <p className="text-foreground/80 leading-relaxed text-lg">
-                Nos conhecemos em um momento especial de nossas vidas. Desde o primeiro instante, 
-                soubemos que algo único estava nascendo entre nós. O que começou como uma amizade 
-                se transformou em um amor profundo e verdadeiro.
-              </p>
+          <div className="space-y-6">
+            <div className="flex items-center gap-4">
+              <span className="w-12 h-px bg-primary/40" />
+              <span className="text-sm text-primary tracking-widest uppercase">O Grande Dia</span>
             </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                <span className="w-12 h-px bg-primary/40" />
-                <span className="text-sm text-primary tracking-widest uppercase">O Pedido</span>
-              </div>
-              <p className="text-foreground/80 leading-relaxed text-lg">
-                Após anos de companheirismo, risadas e sonhos compartilhados, decidimos dar o 
-                próximo passo em nossa jornada juntos. O pedido de casamento foi um momento 
-                mágico que guardaremos para sempre em nossos corações.
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                <span className="w-12 h-px bg-primary/40" />
-                <span className="text-sm text-primary tracking-widest uppercase">O Grande Dia</span>
-              </div>
-              <p className="text-foreground/80 leading-relaxed text-lg">
-                E agora, em 10 de outubro de 2026, vamos celebrar nosso amor cercados por 
-                todos aqueles que nos são queridos. Será o dia mais especial de nossas vidas, 
-                e queremos muito que você faça parte dele.
-              </p>
-            </div>
+            <p className="text-foreground/80 leading-relaxed text-lg">
+              Quem diria que aquele encontro em 2019 nos traria até aqui? A vida tem seus próprios
+              caminhos, mas hoje entendemos que, desde o início, Deus já cuidava de cada detalhe da
+              nossa história. Com o passar dos anos, crescemos juntos, enfrentamos desafios,
+              amadurecemos e descobrimos que o amor verdadeiro não acontece por acaso: ele é
+              construído diariamente e fortalecido pela fé.
+            </p>
+            <p className="text-foreground/80 leading-relaxed text-lg">
+              Hoje, com a certeza de que fomos preparados um para o outro, damos mais um passo
+              importante rumo ao nosso {'"'}para sempre{'"'}. Estamos vivendo a realização de um
+              grande sonho e mal podemos esperar para celebrar esse momento ao lado das pessoas que
+              mais amamos.
+            </p>
+            <p className="text-foreground/80 leading-relaxed text-lg">
+              Sua presença tornará esse dia ainda mais especial para nós. Esperamos você para juntos
+              agradecermos a Deus e celebrarmos o início de um novo capítulo da nossa história.
+            </p>
           </div>
         </div>
 
