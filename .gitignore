@@ -13,3 +13,7 @@ __v0_jsx-dev-runtime.ts
 node_modules
 .next/
 .DS_Store
+
+# Lista de convidados (dados pessoais — não versionar / não subir)
+lista/
+*.xlsx
