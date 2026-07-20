@@ -1,46 +1,44 @@
 "use client"
 
 import { useState } from "react"
-import { CheckCircle, Send } from "lucide-react"
+import { Search, ArrowLeft } from "lucide-react"
+import type { PublicHousehold } from "@/lib/supabase/types"
+import { RsvpConfirmForm } from "@/components/rsvp-confirm-form"
 
 export function RSVPSection() {
-  const [submitted, setSubmitted] = useState(false)
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    guests: "1",
-    attendance: "yes",
-    message: "",
-  })
+  const [query, setQuery] = useState("")
+  const [results, setResults] = useState<PublicHousehold[] | null>(null)
+  const [selected, setSelected] = useState<PublicHousehold | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  async function search(e: React.FormEvent) {
     e.preventDefault()
-    // Here you would typically send the data to your backend
-    console.log("RSVP Data:", formData)
-    setSubmitted(true)
-  }
-
-  if (submitted) {
-    return (
-      <section id="confirmar-presenca" className="py-20 md:py-32 bg-secondary">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <CheckCircle className="w-16 h-16 text-primary mx-auto mb-6" />
-          <h2 className="font-[family-name:var(--font-great-vibes)] text-5xl md:text-6xl text-primary mb-4">
-            Obrigado!
-          </h2>
-          <p className="text-foreground/80 text-lg">
-            Sua confirmação foi recebida com sucesso. Estamos ansiosos para celebrar este dia especial com você!
-          </p>
-        </div>
-      </section>
-    )
+    setLoading(true)
+    setError(null)
+    setResults(null)
+    try {
+      const res = await fetch("/api/rsvp/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error ?? "Não foi possível buscar.")
+        return
+      }
+      setResults(data.results)
+    } catch {
+      setError("Erro de conexão. Tente novamente.")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
     <section id="confirmar-presenca" className="py-20 md:py-32 bg-secondary">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
         <div className="text-center mb-12">
           <h2 className="font-[family-name:var(--font-great-vibes)] text-5xl md:text-6xl text-primary mb-4">
             Confirmar Presença
@@ -50,127 +48,74 @@ export function RSVPSection() {
           </p>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="bg-card rounded-lg p-6 md:p-8 shadow-sm space-y-6">
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-foreground mb-2">
-                Nome Completo *
-              </label>
-              <input
-                type="text"
-                id="name"
-                required
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-4 py-3 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
-                placeholder="Seu nome"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
-                E-mail *
-              </label>
-              <input
-                type="email"
-                id="email"
-                required
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full px-4 py-3 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
-                placeholder="seu@email.com"
-              />
-            </div>
+        {selected ? (
+          <div className="space-y-4">
+            <button
+              onClick={() => setSelected(null)}
+              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="w-4 h-4" /> Buscar outro nome
+            </button>
+            <RsvpConfirmForm household={selected} />
           </div>
-
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-foreground mb-2">
-                Telefone
+        ) : (
+          <>
+            <form onSubmit={search} className="bg-card rounded-lg p-6 md:p-8 shadow-sm">
+              <label htmlFor="rsvp-search" className="block text-sm font-medium text-foreground mb-2">
+                Digite o nome do convidado principal (anfitrião do convite)
               </label>
-              <input
-                type="tel"
-                id="phone"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="w-full px-4 py-3 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
-                placeholder="(67) 99999-9999"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="guests" className="block text-sm font-medium text-foreground mb-2">
-                Número de Convidados *
-              </label>
-              <select
-                id="guests"
-                required
-                value={formData.guests}
-                onChange={(e) => setFormData({ ...formData, guests: e.target.value })}
-                className="w-full px-4 py-3 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
-              >
-                {[1, 2, 3, 4, 5].map((num) => (
-                  <option key={num} value={num}>
-                    {num} {num === 1 ? "pessoa" : "pessoas"}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              Você irá comparecer? *
-            </label>
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2 cursor-pointer">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <input
-                  type="radio"
-                  name="attendance"
-                  value="yes"
-                  checked={formData.attendance === "yes"}
-                  onChange={(e) => setFormData({ ...formData, attendance: e.target.value })}
-                  className="w-4 h-4 text-primary border-border focus:ring-primary/50"
+                  id="rsvp-search"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  className="flex-1 px-4 py-3 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
+                  placeholder="Ex.: Maria Silva"
                 />
-                <span className="text-foreground">Sim, estarei presente</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="attendance"
-                  value="no"
-                  checked={formData.attendance === "no"}
-                  onChange={(e) => setFormData({ ...formData, attendance: e.target.value })}
-                  className="w-4 h-4 text-primary border-border focus:ring-primary/50"
-                />
-                <span className="text-foreground">Infelizmente não poderei ir</span>
-              </label>
-            </div>
-          </div>
+                <button
+                  type="submit"
+                  disabled={loading || query.trim().length < 3}
+                  className="bg-primary text-primary-foreground px-6 py-3 rounded-md hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 text-sm tracking-widest uppercase disabled:opacity-60"
+                >
+                  <Search className="w-4 h-4" />
+                  {loading ? "Buscando..." : "Buscar"}
+                </button>
+              </div>
+              {error && <p className="text-sm text-destructive mt-3">{error}</p>}
+            </form>
 
-          <div>
-            <label htmlFor="message" className="block text-sm font-medium text-foreground mb-2">
-              Mensagem para os Noivos
-            </label>
-            <textarea
-              id="message"
-              rows={4}
-              value={formData.message}
-              onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-              className="w-full px-4 py-3 bg-background border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground resize-none"
-              placeholder="Deixe uma mensagem especial..."
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="w-full bg-primary text-primary-foreground py-4 rounded-md hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 text-sm tracking-widest uppercase"
-          >
-            <Send className="w-4 h-4" />
-            Confirmar Presença
-          </button>
-        </form>
+            {results && (
+              <div className="mt-6 space-y-2">
+                {results.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-6">
+                    Nenhum convite encontrado com esse nome. Confira a grafia ou fale com os noivos.
+                  </p>
+                ) : (
+                  results.map((h) => (
+                    <button
+                      key={h.id}
+                      onClick={() => setSelected(h)}
+                      className="w-full text-left bg-card rounded-lg p-4 shadow-sm hover:ring-2 hover:ring-primary/40 transition-all flex items-center justify-between"
+                    >
+                      <div>
+                        <p className="font-medium text-foreground">{h.host_name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {h.max_seats} {h.max_seats === 1 ? "lugar" : "lugares"} ·{" "}
+                          {h.rsvp_status === "confirmed"
+                            ? "confirmado"
+                            : h.rsvp_status === "declined"
+                              ? "recusado"
+                              : "pendente"}
+                        </p>
+                      </div>
+                      <span className="text-sm text-primary">Selecionar →</span>
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
+          </>
+        )}
       </div>
     </section>
   )
