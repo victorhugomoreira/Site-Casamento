@@ -23,6 +23,18 @@ export interface Household {
   updated_at: string
 }
 
+export interface Gift {
+  id: string
+  name: string
+  description: string | null
+  price: number
+  category: string | null
+  image_url: string | null
+  sort_order: number
+  created_at: string
+  updated_at: string
+}
+
 /** Dados mínimos expostos publicamente no fluxo de RSVP (sem telefone, sem lista completa). */
 export interface PublicHousehold {
   id: string

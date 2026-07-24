@@ -1,6 +1,6 @@
 /** Dados do casamento — fonte única reutilizada no convite e no RSVP. */
 export const WEDDING = {
-  couple: "Bruna & Victor",
+  couple: "Bruna & Victor Hugo",
   dateISO: "2026-10-10T11:00:00",
   dateLabel: "10 . 10 . 2026",
   dateLong: "Sábado, 10 de Outubro de 2026",

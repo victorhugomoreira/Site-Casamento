@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react"
 import type { Household } from "@/lib/supabase/types"
-import { CopyLinkButton } from "./copy-link-button"
 
 const STATUS_LABEL: Record<Household["rsvp_status"], string> = {
   pending: "Pendente",
@@ -63,7 +62,6 @@ export function HouseholdTable({ households }: { households: Household[] }) {
               <th className="px-4 py-3 font-medium">Telefone</th>
               <th className="px-4 py-3 font-medium text-center">Lugares</th>
               <th className="px-4 py-3 font-medium">Status</th>
-              <th className="px-4 py-3 font-medium">Link do convite</th>
             </tr>
           </thead>
           <tbody>
@@ -96,14 +94,11 @@ export function HouseholdTable({ households }: { households: Household[] }) {
                     {STATUS_LABEL[h.rsvp_status]}
                   </span>
                 </td>
-                <td className="px-4 py-3">
-                  <CopyLinkButton path={`/convite/${h.invite_token}`} label="Copiar" />
-                </td>
               </tr>
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-10 text-center text-muted-foreground">
+                <td colSpan={4} className="px-4 py-10 text-center text-muted-foreground">
                   Nenhum convidado encontrado.
                 </td>
               </tr>

@@ -20,7 +20,7 @@ export function Footer() {
 
         <div className="mt-8 pt-8 border-t border-primary-foreground/20">
           <p className="text-xs text-primary-foreground/50">
-            #BrunaeVictor2026
+            #BrunaeVictorHugo2026
           </p>
         </div>
       </div>

@@ -38,12 +38,10 @@ function highlightCoupon(text: string) {
 
 const categories: Category[] = [
   {
-    title: "Hospedagem",
+    title: "Onde se hospedar",
     intro: [
-      "Para proporcionar uma experiência ainda melhor, firmamos uma parceria com hotéis próximos ao evento. Todos os hotéis abaixo oferecem desconto exclusivo para nossos convidados.",
-      "Basta entrar em contato diretamente com o hotel (por telefone, WhatsApp ou outro canal de atendimento) e informar que deseja utilizar o cupom VIDA DE NOIVA no momento da reserva. O desconto está sujeito às regras de cada hotel.",
+      "Para os nossos convidados que virão de outras cidades, e pensando em tornar a organização da sua viagem ainda mais prática, selecionamos algumas opções de hospedagem que oferecem conforto e uma ótima experiência. Esperamos que essas sugestões sejam úteis para que você aproveite esse momento tão especial conosco.",
     ],
-    note: "Importante: Para obter o desconto, entre em contato diretamente com o hotel e informe o cupom VIDA DE NOIVA antes de finalizar a reserva. Recomendamos realizar a reserva com antecedência, pois a disponibilidade e as condições promocionais podem variar conforme o período.",
     places: [
       {
         name: "WR Confort Hotel Campo Grande",
@@ -72,7 +70,10 @@ const categories: Category[] = [
     ],
   },
   {
-    title: "Salões de Beleza",
+    title: "Cabelo e maquiagem",
+    intro: [
+      "Para quem desejar se preparar para esse dia especial, reunimos algumas sugestões de salões de beleza e profissionais que poderão ajudá-los a viver esse momento com ainda mais tranquilidade. Escolha a opção que melhor atender às suas preferências.",
+    ],
     places: [
       {
         name: "Spazio Carlos Martins",
@@ -82,14 +83,12 @@ const categories: Category[] = [
         mapsUrl: "https://maps.google.com/?q=Spazio+Carlos+Martins+Campo+Grande",
       },
       {
-        name: "Marce Makeup",
-        address: "Endereço não informado",
+        name: "Marcela Makeup",
         phone: "+55 67 99230-2264",
         instagram: "_marcemakeup",
       },
       {
-        name: "Lazzarotto Makeup",
-        address: "Endereço não informado",
+        name: "Lethicia Makeup",
         phone: "+55 67 98205-7174",
         instagram: "lazzarotto.makeup",
       },
@@ -114,7 +113,9 @@ function PlaceCard({ place }: { place: Place }) {
         )}
         {place.phone && (
           <a
-            href={`tel:${place.phone.replace(/[^+\d]/g, "")}`}
+            href={`https://wa.me/${place.phone.replace(/\D/g, "")}`}
+            target="_blank"
+            rel="noopener noreferrer"
             className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
           >
             <Phone className="w-4 h-4 text-primary shrink-0" />

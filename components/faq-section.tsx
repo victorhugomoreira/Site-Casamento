@@ -9,28 +9,16 @@ const faqs = [
     answer: "Os convites são individuais e nominais. Caso você tenha sido convidado com acompanhante, isso estará indicado no seu convite. Em caso de dúvidas, entre em contato conosco."
   },
   {
-    question: "Crianças são bem-vindas?",
-    answer: "Adoramos crianças! Se seu convite incluir seus filhos, eles serão muito bem-vindos. Caso contrário, pedimos a compreensão de que esta será uma celebração apenas para adultos."
-  },
-  {
     question: "Até quando devo confirmar presença?",
     answer: "Pedimos que confirme sua presença até 10 de setembro de 2026, para que possamos organizar todos os detalhes com carinho."
   },
   {
     question: "Haverá estacionamento no local?",
-    answer: "Sim! Tanto a capela quanto o salão de festas possuem estacionamento próprio e gratuito para os convidados."
-  },
-  {
-    question: "Posso tirar fotos durante a cerimônia?",
-    answer: "Durante a cerimônia religiosa, pedimos que evitem o uso de celulares e câmeras para que todos possam viver o momento presente. Teremos fotógrafos profissionais registrando cada detalhe. Na festa, sintam-se à vontade para tirar muitas fotos!"
+    answer: "A capela dispõe de estacionamento próprio para os convidados. Para a recepção, o salão de festas não possui estacionamento privativo, mas é possível estacionar nas ruas ao redor. No site, você encontrará o endereço com acesso direto pelo Google Maps para facilitar sua chegada."
   },
   {
     question: "Qual o horário da cerimônia e da festa?",
     answer: "A cerimônia religiosa começará às 11h na Capela Salesiana São Francisco de Sales. Logo após, seguiremos para a festa no Arya Eventos."
-  },
-  {
-    question: "Como posso entrar em contato com os noivos?",
-    answer: "Você pode nos enviar uma mensagem através do formulário de confirmação de presença ou pelo WhatsApp dos padrinhos."
   },
 ]
 
@@ -54,15 +42,23 @@ export function FAQSection() {
           </p>
         </div>
 
-        {/* Traje Card */}
+        {/* Dress Code Card */}
         <div className="bg-card rounded-lg p-8 mb-8 shadow-sm border border-border">
           <div className="text-center">
-            <h3 className="text-2xl font-semibold text-foreground mb-4">Traje</h3>
+            <h3 className="text-2xl font-semibold text-foreground mb-4">Dress Code</h3>
             <div className="w-16 h-0.5 bg-primary mx-auto mb-6" />
-            <p className="text-lg text-foreground mb-2">Esporte Fino</p>
-            <p className="text-muted-foreground text-sm max-w-md mx-auto">
-              Pedimos gentilmente que evitem branco, creme e tons muito claros, pois são reservados para a noiva.
-            </p>
+            <p className="text-lg text-foreground mb-4">Esporte Fino</p>
+            <div className="text-muted-foreground text-sm max-w-xl mx-auto space-y-3 leading-relaxed">
+              <p>
+                Mais do que qualquer traje, queremos a presença de pessoas queridas celebrando esse
+                momento conosco. Sintam-se à vontade para escolher um look elegante e confortável,
+                ideal para uma cerimônia e recepção durante o dia.
+              </p>
+              <p>
+                Como tradição, pedimos apenas que evitem roupas em branco, off-white, creme e tons
+                muito claros, reservadas para a noiva.
+              </p>
+            </div>
           </div>
         </div>
 

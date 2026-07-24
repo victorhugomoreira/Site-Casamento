@@ -16,7 +16,7 @@ const greatVibes = Great_Vibes({
 })
 
 export const metadata: Metadata = {
-  title: 'Bruna & Victor | 10.10.2026',
+  title: 'Bruna & Victor Hugo | 10.10.2026',
   description: 'Celebre conosco o nosso casamento em Campo Grande - MS',
   generator: 'v0.app',
   icons: {

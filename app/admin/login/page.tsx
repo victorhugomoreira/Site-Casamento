@@ -48,7 +48,7 @@ function LoginForm() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <h1 className="font-[family-name:var(--font-great-vibes)] text-5xl text-primary mb-1">
-            Bruna &amp; Victor
+            Bruna &amp; Victor Hugo
           </h1>
           <p className="text-muted-foreground tracking-wide text-sm">Área dos noivos</p>
         </div>

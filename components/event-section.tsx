@@ -10,8 +10,11 @@ export function EventSection() {
           <h2 className="font-[family-name:var(--font-great-vibes)] text-5xl md:text-6xl text-primary mb-4">
             O Evento
           </h2>
-          <p className="text-muted-foreground tracking-wide">
-            Junte-se a nós neste dia especial
+          <p className="text-muted-foreground tracking-wide max-w-2xl mx-auto">
+            Gostaríamos muito de contar com a presença de todos vocês no momento em que nossa união
+            será abençoada diante de Deus!
+            <br />
+            Por favor, chegue com alguns minutos de antecedência. A cerimônia começará pontualmente.
           </p>
         </div>
 
@@ -21,7 +24,7 @@ export function EventSection() {
           <div className="bg-card rounded-lg overflow-hidden shadow-sm">
             <div className="relative aspect-[16/10]">
               <Image
-                src="/images/capela-salesiana.jpg"
+                src="/images/unnamed.webp"
                 alt="Capela Salesiana São Francisco de Sales"
                 fill
                 className="object-cover"
@@ -86,7 +89,7 @@ export function EventSection() {
                 <div className="flex items-start gap-3">
                   <Clock className="w-5 h-5 text-primary/60 mt-0.5 shrink-0" />
                   <div>
-                    <p className="font-medium">Após a cerimônia</p>
+                    <p className="font-medium">Logo após a cerimônia religiosa</p>
                     <p className="text-sm text-muted-foreground">Recepção e celebração</p>
                   </div>
                 </div>

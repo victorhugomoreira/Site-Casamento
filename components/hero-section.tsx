@@ -37,10 +37,10 @@ export function HeroSection() {
       {/* Background Image */}
       <div className="absolute inset-0">
         <Image
-          src="/images/hero-wedding.png"
-          alt="Bruna e Victor"
+          src="/images/SGF_1392.jpg"
+          alt="Bruna e Victor Hugo"
           fill
-          className="object-cover"
+          className="object-cover object-center md:object-[50%_22%]"
           priority
         />
         <div className="absolute inset-0 bg-foreground/30" />
@@ -53,7 +53,7 @@ export function HeroSection() {
         </p>
         
         <h1 className="font-[family-name:var(--font-great-vibes)] text-6xl md:text-8xl lg:text-9xl mb-6 text-balance">
-          Bruna & Victor
+          Bruna & Victor Hugo
         </h1>
         
         <div className="flex items-center justify-center gap-4 mb-12">

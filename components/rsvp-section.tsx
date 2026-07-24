@@ -62,7 +62,7 @@ export function RSVPSection() {
           <>
             <form onSubmit={search} className="bg-card rounded-lg p-6 md:p-8 shadow-sm">
               <label htmlFor="rsvp-search" className="block text-sm font-medium text-foreground mb-2">
-                Digite o nome do convidado principal (anfitrião do convite)
+                Digite o nome do convidado principal
               </label>
               <div className="flex flex-col sm:flex-row gap-3">
                 <input

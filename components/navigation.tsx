@@ -34,7 +34,7 @@ export function Navigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 md:h-20">
           <a href="#" className="font-[family-name:var(--font-great-vibes)] text-2xl md:text-3xl text-primary">
-            B & V
+            B&VH
           </a>
 
           {/* Desktop Navigation */}
