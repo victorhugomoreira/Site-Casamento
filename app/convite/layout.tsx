@@ -14,5 +14,17 @@ export const metadata: Metadata = {
 }
 
 export default function ConviteLayout({ children }: { children: React.ReactNode }) {
-  return children
+  return (
+    <>
+      {/*
+        Os blocos do convite entram em fade via JavaScript, começando invisíveis.
+        Sem JS eles ficariam presos assim — este estilo garante que o convite
+        continue legível de qualquer forma.
+      */}
+      <noscript>
+        <style>{`.reveal { opacity: 1 !important; transform: none !important; }`}</style>
+      </noscript>
+      {children}
+    </>
+  )
 }
