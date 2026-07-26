@@ -4,6 +4,8 @@ import { useState } from "react"
 import { Search, ArrowLeft } from "lucide-react"
 import type { PublicHousehold } from "@/lib/supabase/types"
 import { RsvpConfirmForm } from "@/components/rsvp-confirm-form"
+import { SectionHeader } from "@/components/ui/section-header"
+import { WEDDING } from "@/lib/event"
 
 export function RSVPSection() {
   const [query, setQuery] = useState("")
@@ -39,14 +41,11 @@ export function RSVPSection() {
   return (
     <section id="confirmar-presenca" className="py-20 md:py-32 bg-secondary">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="font-[family-name:var(--font-great-vibes)] text-5xl md:text-6xl text-primary mb-4">
-            Confirmar Presença
-          </h2>
-          <p className="text-muted-foreground tracking-wide">
-            Por favor, confirme sua presença até 10 de setembro de 2026
-          </p>
-        </div>
+        <SectionHeader
+          title="Confirmar Presença"
+          subtitle={`Por favor, confirme sua presença até ${WEDDING.rsvpDeadline}`}
+          className="mb-12"
+        />
 
         {selected ? (
           <div className="space-y-4">

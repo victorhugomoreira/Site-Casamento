@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+import { createPublicClient } from "@/lib/supabase/public"
 import type { Gift } from "@/lib/supabase/types"
 import { CheckoutView } from "@/components/gifts/checkout-view"
 
-export const dynamic = "force-dynamic"
+export const revalidate = 300
 
 export default async function CheckoutPage({
   params,
@@ -12,7 +12,7 @@ export default async function CheckoutPage({
 }) {
   const { id } = await params
 
-  const supabase = await createClient()
+  const supabase = createPublicClient()
   const { data } = await supabase.from("gifts").select("*").eq("id", id).single()
 
   if (!data) notFound()

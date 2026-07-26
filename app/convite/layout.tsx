@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: `Casamento de ${WEDDING.couple}`,
     description: `${WEDDING.dateLong} · ${WEDDING.city}. Confirme sua presença!`,
-    images: ["/images/hero-wedding.png"],
+    images: ["/images/hero.webp"],
     type: "website",
   },
 }

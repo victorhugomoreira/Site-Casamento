@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
 import { Check, Copy } from "lucide-react"
+import { useCopy } from "@/hooks/use-copy"
 
 interface Props {
   /** Caminho relativo, ex. "/convite" ou "/convite/abc123" */
@@ -11,25 +11,17 @@ interface Props {
 }
 
 export function CopyLinkButton({ path, label = "Copiar link", className }: Props) {
-  const [copied, setCopied] = useState(false)
+  const { copied, copy } = useCopy(1800)
 
-  async function copy() {
-    const url =
-      typeof window !== "undefined" ? `${window.location.origin}${path}` : path
-    try {
-      await navigator.clipboard.writeText(url)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1800)
-    } catch {
-      // fallback: seleciona via prompt
-      window.prompt("Copie o link:", url)
-    }
+  function handleClick() {
+    const url = typeof window !== "undefined" ? `${window.location.origin}${path}` : path
+    copy(url)
   }
 
   return (
     <button
       type="button"
-      onClick={copy}
+      onClick={handleClick}
       className={
         className ??
         "inline-flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 transition-colors"

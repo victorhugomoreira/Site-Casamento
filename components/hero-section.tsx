@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import Image from "next/image"
 import { ChevronDown } from "lucide-react"
+import { WEDDING } from "@/lib/event"
 
 export function HeroSection() {
   const [timeLeft, setTimeLeft] = useState({
@@ -13,8 +14,9 @@ export function HeroSection() {
   })
 
   useEffect(() => {
-    const weddingDate = new Date("2026-10-10T11:00:00")
-    
+    const weddingDate = new Date(WEDDING.dateISO)
+
+
     const timer = setInterval(() => {
       const now = new Date()
       const difference = weddingDate.getTime() - now.getTime()
@@ -37,11 +39,13 @@ export function HeroSection() {
       {/* Background Image */}
       <div className="absolute inset-0">
         <Image
-          src="/images/SGF_1392.jpg"
+          src="/images/hero.webp"
           alt="Bruna e Victor Hugo"
           fill
+          sizes="100vw"
           className="object-cover object-center md:object-[50%_22%]"
           priority
+          fetchPriority="high"
         />
         <div className="absolute inset-0 bg-foreground/30" />
       </div>
@@ -53,12 +57,12 @@ export function HeroSection() {
         </p>
         
         <h1 className="font-[family-name:var(--font-great-vibes)] text-6xl md:text-8xl lg:text-9xl mb-6 text-balance">
-          Bruna & Victor Hugo
+          {WEDDING.couple}
         </h1>
-        
+
         <div className="flex items-center justify-center gap-4 mb-12">
           <span className="w-16 md:w-24 h-px bg-card/60" />
-          <span className="text-lg md:text-xl tracking-widest">10 . 10 . 2026</span>
+          <span className="text-lg md:text-xl tracking-widest">{WEDDING.dateLabel}</span>
           <span className="w-16 md:w-24 h-px bg-card/60" />
         </div>
 

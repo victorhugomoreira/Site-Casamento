@@ -3,29 +3,35 @@
 import Image from "next/image"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import { SectionHeader } from "@/components/ui/section-header"
 
-const galleryImages = [
-  { src: "/images/carrocel/SGF_2190.jpg", alt: "Bruna e Victor Hugo - Foto 1" },
-  { src: "/images/carrocel/SGF_1181.jpg", alt: "Bruna e Victor Hugo - Foto 2" },
-  { src: "/images/carrocel/SGF_1366.jpg", alt: "Bruna e Victor Hugo - Foto 3" },
-  { src: "/images/carrocel/SGF_1398.jpg", alt: "Bruna e Victor Hugo - Foto 4" },
-  { src: "/images/carrocel/SGF_1538.jpg", alt: "Bruna e Victor Hugo - Foto 5" },
-  { src: "/images/carrocel/SGF_1548.jpg", alt: "Bruna e Victor Hugo - Foto 6" },
-  { src: "/images/carrocel/SGF_1586.jpg", alt: "Bruna e Victor Hugo - Foto 7" },
-  { src: "/images/carrocel/SGF_1915.jpg", alt: "Bruna e Victor Hugo - Foto 8" },
-  { src: "/images/carrocel/SGF_1925.jpg", alt: "Bruna e Victor Hugo - Foto 9" },
-  { src: "/images/carrocel/SGF_1944.jpg", alt: "Bruna e Victor Hugo - Foto 10" },
-  { src: "/images/carrocel/SGF_2031.jpg", alt: "Bruna e Victor Hugo - Foto 11" },
-  { src: "/images/carrocel/SGF_2057.jpg", alt: "Bruna e Victor Hugo - Foto 12" },
-  { src: "/images/carrocel/SGF_2232.jpg", alt: "Bruna e Victor Hugo - Foto 13" },
+const GALLERY_FILES = [
+  "SGF_2190", "SGF_1181", "SGF_1366", "SGF_1398", "SGF_1538",
+  "SGF_1548", "SGF_1586", "SGF_1915", "SGF_1925", "SGF_1944",
+  "SGF_2031", "SGF_2057", "SGF_2232",
 ]
+
+const galleryImages = GALLERY_FILES.map((name, i) => ({
+  src: `/images/carrocel/${name}.webp`,
+  alt: `Bruna e Victor Hugo - Foto ${i + 1}`,
+}))
 
 const AUTOPLAY_MS = 4000
 const SWIPE_THRESHOLD = 50
+/** Quantos slides à frente/atrás já ficam baixados (o resto só carrega ao chegar perto). */
+const PRELOAD_RADIUS = 1
 
 export function GallerySection() {
   const [current, setCurrent] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
+
+  /**
+   * Fotos já liberadas para download. Cresce conforme o convidado navega e nunca
+   * encolhe, então voltar um slide não baixa a imagem de novo.
+   */
+  const [loaded, setLoaded] = useState<Set<number>>(
+    () => new Set([galleryImages.length - 1, 0, 1]),
+  )
 
   // Estado do arraste (dedo no celular ou mouse no notebook)
   const dragStartX = useRef<number | null>(null)
@@ -39,6 +45,17 @@ export function GallerySection() {
   )
   const goToPrevious = useCallback(() => goTo(current - 1), [current, goTo])
   const goToNext = useCallback(() => goTo(current + 1), [current, goTo])
+
+  // Libera os vizinhos do slide atual para download
+  useEffect(() => {
+    setLoaded((prev) => {
+      const next = new Set(prev)
+      for (let d = -PRELOAD_RADIUS; d <= PRELOAD_RADIUS; d++) {
+        next.add((current + d + total) % total)
+      }
+      return next.size === prev.size ? prev : next
+    })
+  }, [current, total])
 
   // Passagem automática
   useEffect(() => {
@@ -78,15 +95,7 @@ export function GallerySection() {
   return (
     <section id="galeria" className="py-20 md:py-32 bg-background">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="text-center mb-16">
-          <h2 className="font-[family-name:var(--font-great-vibes)] text-5xl md:text-6xl text-primary mb-4">
-            Galeria
-          </h2>
-          <p className="text-muted-foreground tracking-wide">
-            Momentos especiais da nossa jornada
-          </p>
-        </div>
+        <SectionHeader title="Galeria" subtitle="Momentos especiais da nossa jornada" />
 
         {/* Carrossel */}
         <div
@@ -110,15 +119,23 @@ export function GallerySection() {
             onPointerCancel={endDrag}
           >
             {galleryImages.map((image, index) => (
-              <div key={index} className="relative w-full shrink-0 h-[60vh] md:h-[80vh]">
-                <Image
-                  src={image.src}
-                  alt={image.alt}
-                  fill
-                  priority={index === 0}
-                  draggable={false}
-                  className="object-cover pointer-events-none"
-                />
+              <div
+                key={index}
+                className="relative w-full shrink-0 h-[60vh] md:h-[80vh] bg-secondary"
+                aria-hidden={index !== current}
+              >
+                {loaded.has(index) && (
+                  <Image
+                    src={image.src}
+                    alt={image.alt}
+                    fill
+                    sizes="(max-width: 1600px) 100vw, 1600px"
+                    priority={index === 0}
+                    loading={index === 0 ? undefined : "lazy"}
+                    draggable={false}
+                    className="object-cover pointer-events-none"
+                  />
+                )}
               </div>
             ))}
           </div>

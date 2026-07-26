@@ -1,22 +1,24 @@
 import Image from "next/image"
 import { MapPin, Clock, Church, PartyPopper } from "lucide-react"
+import { SectionHeader } from "@/components/ui/section-header"
+import { WEDDING } from "@/lib/event"
 
 export function EventSection() {
   return (
     <section id="evento" className="py-20 md:py-32 bg-secondary">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="text-center mb-16">
-          <h2 className="font-[family-name:var(--font-great-vibes)] text-5xl md:text-6xl text-primary mb-4">
-            O Evento
-          </h2>
-          <p className="text-muted-foreground tracking-wide max-w-2xl mx-auto">
-            Gostaríamos muito de contar com a presença de todos vocês no momento em que nossa união
-            será abençoada diante de Deus!
-            <br />
-            Por favor, chegue com alguns minutos de antecedência. A cerimônia começará pontualmente.
-          </p>
-        </div>
+        <SectionHeader
+          title="O Evento"
+          subtitle={
+            <>
+              Gostaríamos muito de contar com a presença de todos vocês no momento em que nossa
+              união será abençoada diante de Deus!
+              <br />
+              Por favor, chegue com alguns minutos de antecedência. A cerimônia começará
+              pontualmente.
+            </>
+          }
+        />
 
         {/* Events Grid */}
         <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
@@ -24,9 +26,11 @@ export function EventSection() {
           <div className="bg-card rounded-lg overflow-hidden shadow-sm">
             <div className="relative aspect-[16/10]">
               <Image
-                src="/images/unnamed.webp"
+                src="/images/capela.webp"
                 alt="Capela Salesiana São Francisco de Sales"
                 fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                loading="lazy"
                 className="object-cover"
               />
             </div>
@@ -40,25 +44,24 @@ export function EventSection() {
                 <div className="flex items-start gap-3">
                   <Clock className="w-5 h-5 text-primary/60 mt-0.5 shrink-0" />
                   <div>
-                    <p className="font-medium">11:00 da manhã</p>
-                    <p className="text-sm text-muted-foreground">Sábado, 10 de Outubro de 2026</p>
+                    <p className="font-medium">{WEDDING.time}</p>
+                    <p className="text-sm text-muted-foreground">{WEDDING.dateLong}</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start gap-3">
                   <MapPin className="w-5 h-5 text-primary/60 mt-0.5 shrink-0" />
                   <div>
-                    <p className="font-medium">Capela Salesiana São Francisco de Sales</p>
-                    <p className="text-sm text-muted-foreground">
-                      Av. Eliseu Ramos de Mendonça, 8000
-                    </p>
-                    <p className="text-sm text-muted-foreground">Campo Grande - MS</p>
+                    <p className="font-medium">{WEDDING.ceremony.name}</p>
+                    {WEDDING.ceremony.addressLines.map((line) => (
+                      <p key={line} className="text-sm text-muted-foreground">{line}</p>
+                    ))}
                   </div>
                 </div>
               </div>
 
               <a
-                href="https://maps.google.com/?q=Capela+Salesiana+São+Francisco+de+Sales+Campo+Grande"
+                href={WEDDING.ceremony.maps}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 mt-6 text-sm text-primary hover:text-primary/80 transition-colors"
@@ -73,9 +76,11 @@ export function EventSection() {
           <div className="bg-card rounded-lg overflow-hidden shadow-sm">
             <div className="relative aspect-[16/10]">
               <Image
-                src="/images/arya-eventos.jpg"
+                src="/images/arya-eventos.webp"
                 alt="Arya Eventos"
                 fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                loading="lazy"
                 className="object-cover"
               />
             </div>
@@ -97,17 +102,16 @@ export function EventSection() {
                 <div className="flex items-start gap-3">
                   <MapPin className="w-5 h-5 text-primary/60 mt-0.5 shrink-0" />
                   <div>
-                    <p className="font-medium">Arya Eventos</p>
-                    <p className="text-sm text-muted-foreground">
-                      R. Martin Afonso de Souza, 362 - Nova Lima
-                    </p>
-                    <p className="text-sm text-muted-foreground">Campo Grande - MS, 79017-032</p>
+                    <p className="font-medium">{WEDDING.reception.name}</p>
+                    {WEDDING.reception.addressLines.map((line) => (
+                      <p key={line} className="text-sm text-muted-foreground">{line}</p>
+                    ))}
                   </div>
                 </div>
               </div>
 
               <a
-                href="https://maps.google.com/?q=Arya+Eventos+Campo+Grande"
+                href={WEDDING.reception.maps}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 mt-6 text-sm text-primary hover:text-primary/80 transition-colors"

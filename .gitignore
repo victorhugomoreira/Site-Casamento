@@ -18,3 +18,6 @@ tsconfig.tsbuildinfo
 # Lista de convidados (dados pessoais — não versionar / não subir)
 lista/
 *.xlsx
+
+# Fotos originais da câmera (backup local — as versões otimizadas ficam em public/images)
+_originais-fotos/

@@ -24,6 +24,36 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
+## Fotos do site
+
+**Nunca coloque uma foto direto da câmera em `public/images/`.** Uma foto de 4 MB é
+baixada inteira pelo celular do convidado e derruba o carregamento do site.
+
+O fluxo correto:
+
+1. Coloque os arquivos originais em `../_originais-fotos/`, seguindo a estrutura:
+   - raiz → `hero`, `nossa-historia`, cards de local
+   - `carrocel/` → fotos da galeria
+   - `gifts/` → imagens de presentes
+2. Rode `npm run otimizar-imagens`
+
+O script gera versões WebP no tamanho que o site realmente usa (`public/images/`).
+Na prática isso levou as fotos de **68 MB para 2,4 MB**, sem diferença visível.
+
+> O script usa o `sharp`, que vem junto com o Next. Se você instalar as dependências
+> com `pnpm` e der erro de módulo não encontrado, rode `pnpm add -D sharp` — o pnpm
+> não expõe dependências indiretas por padrão. Isso não afeta o build nem o deploy.
+
+`_originais-fotos/` fica fora do Git e fora do deploy — é só o seu backup local.
+Imagens que não são usadas no site ficam em `_originais-fotos/_nao-usadas/`.
+
+### Cache
+
+- Imagens: 7 dias "fresco" + 30 dias servindo do cache enquanto revalida
+  (`next.config.mjs`). Quem já visitou o site recarrega instantaneamente.
+- Home e `/presentes`: páginas estáticas revalidadas a cada 5 min. Ao editar a lista
+  no admin, o cache é derrubado na hora (`app/actions.ts`), sem esperar os 5 min.
+
 ## Learn More
 
 To learn more, take a look at the following resources:

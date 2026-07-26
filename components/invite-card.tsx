@@ -18,10 +18,12 @@ export function InviteCard({
       {/* Cabeçalho com foto do casal */}
       <div className="relative h-[52vh] min-h-[360px] overflow-hidden">
         <Image
-          src="/images/hero-wedding.png"
+          src="/images/hero.webp"
           alt={WEDDING.couple}
           fill
+          sizes="100vw"
           priority
+          fetchPriority="high"
           className="object-cover"
         />
         <div className="absolute inset-0 bg-foreground/35" />
@@ -98,7 +100,7 @@ export function InviteCard({
 
       <footer className="py-8 text-center text-sm text-muted-foreground">
         <Clock className="w-4 h-4 inline mr-1 -mt-0.5" />
-        Confirme sua presença até 10 de setembro de 2026
+        Confirme sua presença até {WEDDING.rsvpDeadline}
       </footer>
     </main>
   )

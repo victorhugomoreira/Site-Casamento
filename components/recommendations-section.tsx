@@ -1,7 +1,6 @@
-"use client"
-
-import { useState } from "react"
-import { ChevronDown, MapPin, Phone, AtSign, ExternalLink, Info } from "lucide-react"
+import { MapPin, Phone, AtSign, ExternalLink, Info } from "lucide-react"
+import { Accordion } from "@/components/ui/accordion"
+import { SectionHeader } from "@/components/ui/section-header"
 
 type Place = {
   name: string
@@ -163,81 +162,55 @@ function PlaceCard({ place }: { place: Place }) {
   )
 }
 
+function CategoryContent({ category }: { category: Category }) {
+  return (
+    <>
+      {category.intro && (
+        <div className="px-6 pt-2 space-y-3">
+          {category.intro.map((paragraph, p) => (
+            <p key={p} className="text-sm text-foreground/80 leading-relaxed">
+              {highlightCoupon(paragraph)}
+            </p>
+          ))}
+        </div>
+      )}
+      <div className="px-6 pb-6 pt-4 grid gap-4 sm:grid-cols-2">
+        {category.places.map((place, i) => (
+          <PlaceCard key={i} place={place} />
+        ))}
+      </div>
+      {category.note && (
+        <div className="px-6 pb-6">
+          <div className="flex items-start gap-3 rounded-lg border border-primary/30 bg-secondary/60 p-4">
+            <Info className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+            <p className="text-sm text-foreground/80 leading-relaxed">
+              {highlightCoupon(category.note)}
+            </p>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
 export function RecommendationsSection() {
-  const [openIndex, setOpenIndex] = useState<number | null>(null)
-
-  const toggle = (index: number) => {
-    setOpenIndex(openIndex === index ? null : index)
-  }
-
   return (
     <section id="indicacoes" className="py-20 md:py-32 bg-background">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="text-center mb-12">
-          <h2 className="font-[family-name:var(--font-great-vibes)] text-5xl md:text-6xl text-primary mb-4">
-            Indicações
-          </h2>
-          <p className="text-muted-foreground tracking-wide">
-            Sugestões cuidadosamente selecionadas para tornar a sua experiência ainda mais especial
-          </p>
-        </div>
+        <SectionHeader
+          title="Indicações"
+          subtitle="Sugestões cuidadosamente selecionadas para tornar a sua experiência ainda mais especial"
+          className="mb-12"
+        />
 
-        {/* Accordion */}
-        <div className="space-y-4">
-          {categories.map((category, index) => (
-            <div
-              key={index}
-              className={`rounded-lg overflow-hidden shadow-sm border transition-colors ${
-                openIndex === index ? "border-primary bg-secondary/40" : "border-border bg-card"
-              }`}
-            >
-              <button
-                onClick={() => toggle(index)}
-                className="w-full px-6 py-4 text-left flex items-center justify-between gap-4 hover:bg-secondary/50 transition-colors"
-                aria-expanded={openIndex === index}
-              >
-                <span className="font-medium text-foreground text-lg">{category.title}</span>
-                <ChevronDown
-                  className={`w-5 h-5 text-primary shrink-0 transition-transform duration-300 ${
-                    openIndex === index ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
-
-              <div
-                className={`grid transition-all duration-500 ease-in-out ${
-                  openIndex === index ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
-                }`}
-              >
-                <div className="overflow-hidden">
-                  {category.intro && (
-                    <div className="px-6 pt-2 space-y-3">
-                      {category.intro.map((paragraph, p) => (
-                        <p key={p} className="text-sm text-foreground/80 leading-relaxed">
-                          {highlightCoupon(paragraph)}
-                        </p>
-                      ))}
-                    </div>
-                  )}
-                  <div className="px-6 pb-6 pt-4 grid gap-4 sm:grid-cols-2">
-                    {category.places.map((place, i) => (
-                      <PlaceCard key={i} place={place} />
-                    ))}
-                  </div>
-                  {category.note && (
-                    <div className="px-6 pb-6">
-                      <div className="flex items-start gap-3 rounded-lg border border-primary/30 bg-secondary/60 p-4">
-                        <Info className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                        <p className="text-sm text-foreground/80 leading-relaxed">{highlightCoupon(category.note)}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+        <Accordion
+          variant="highlight"
+          items={categories.map((category) => ({
+            id: category.title,
+            header: <span className="text-lg">{category.title}</span>,
+            content: <CategoryContent category={category} />,
+          }))}
+        />
       </div>
     </section>
   )

@@ -1,18 +1,11 @@
 "use client"
 
 import { Gift, Copy, Check } from "lucide-react"
-import { useState } from "react"
+import { useCopy } from "@/hooks/use-copy"
+import { PIX } from "@/lib/event"
 
 export function PixBox() {
-  const [copied, setCopied] = useState(false)
-
-  const pixKey = "7f25dbc2-5f36-4e71-ba8f-d2796d09e787"
-
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(pixKey)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
+  const { copied, copy } = useCopy()
 
   return (
     <div className="bg-card rounded-lg p-8 text-center shadow-sm border border-border max-w-xl mx-auto">
@@ -23,9 +16,9 @@ export function PixBox() {
       </p>
 
       <div className="flex items-center justify-center gap-3 bg-secondary rounded-lg p-4">
-        <code className="text-foreground text-sm md:text-base flex-1 truncate">{pixKey}</code>
+        <code className="text-foreground text-sm md:text-base flex-1 truncate">{PIX.key}</code>
         <button
-          onClick={copyToClipboard}
+          onClick={() => copy(PIX.key)}
           className="p-2 hover:bg-background rounded-md transition-colors"
           aria-label="Copiar chave PIX"
         >
@@ -40,8 +33,8 @@ export function PixBox() {
       {copied && <p className="text-primary text-sm mt-2">Chave PIX copiada!</p>}
 
       <div className="mt-6 text-sm text-muted-foreground">
-        <p className="text-foreground font-medium">Bruna Rejane Andrea da Silva</p>
-        <p>Mercado Pago</p>
+        <p className="text-foreground font-medium">{PIX.owner}</p>
+        <p>{PIX.bank}</p>
       </div>
     </div>
   )

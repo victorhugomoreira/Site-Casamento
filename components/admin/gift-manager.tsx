@@ -1,11 +1,27 @@
 "use client"
 
 import Image from "next/image"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Gift as GiftIcon, Plus, Trash2, Loader2, ImagePlus, Pencil, X, Check } from "lucide-react"
+import {
+  Gift as GiftIcon,
+  Plus,
+  Trash2,
+  Loader2,
+  ImagePlus,
+  Pencil,
+  X,
+  Check,
+  Crop,
+} from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
+import { revalidateGifts } from "@/app/actions"
+import { ImageCropper } from "@/components/admin/image-cropper"
 import type { Gift } from "@/lib/supabase/types"
+
+/** Formato fixo das fotos de presente: quadrado, igual à vitrine pública. */
+const IMAGE_ASPECT = 1
+const IMAGE_OUTPUT_WIDTH = 1000
 
 function formatPrice(price: number) {
   return Number(price).toLocaleString("pt-BR", {
@@ -33,13 +49,38 @@ export function GiftManager({ gifts }: { gifts: Gift[] }) {
   const [description, setDescription] = useState("")
   const [price, setPrice] = useState("")
   const [category, setCategory] = useState("")
+
+  /** Imagem já recortada, pronta para upload. */
   const [file, setFile] = useState<File | null>(null)
+  /** Arquivo original escolhido — guardado para permitir reajustar o recorte. */
+  const [rawFile, setRawFile] = useState<File | null>(null)
+  /** Arquivo aguardando recorte (abre o cropper enquanto não for nulo). */
+  const [cropping, setCropping] = useState<File | null>(null)
+  const [filePreview, setFilePreview] = useState<string | null>(null)
 
   const [saving, setSaving] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const isEditing = editingId !== null
+
+  // prévia da imagem recortada (revogada ao trocar de arquivo)
+  useEffect(() => {
+    if (!file) {
+      setFilePreview(null)
+      return
+    }
+    const objectUrl = URL.createObjectURL(file)
+    setFilePreview(objectUrl)
+    return () => URL.revokeObjectURL(objectUrl)
+  }, [file])
+
+  function clearImageSelection() {
+    setFile(null)
+    setRawFile(null)
+    setCropping(null)
+    if (fileInputRef.current) fileInputRef.current.value = ""
+  }
 
   function resetForm() {
     setEditingId(null)
@@ -48,8 +89,7 @@ export function GiftManager({ gifts }: { gifts: Gift[] }) {
     setDescription("")
     setPrice("")
     setCategory("")
-    setFile(null)
-    if (fileInputRef.current) fileInputRef.current.value = ""
+    clearImageSelection()
   }
 
   function startEdit(gift: Gift) {
@@ -60,8 +100,7 @@ export function GiftManager({ gifts }: { gifts: Gift[] }) {
     setDescription(gift.description ?? "")
     setPrice(gift.price != null ? String(gift.price) : "")
     setCategory(gift.category ?? "")
-    setFile(null)
-    if (fileInputRef.current) fileInputRef.current.value = ""
+    clearImageSelection()
     formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
   }
 
@@ -128,6 +167,7 @@ export function GiftManager({ gifts }: { gifts: Gift[] }) {
       }
 
       resetForm()
+      await revalidateGifts()
       router.refresh()
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao salvar o presente.")
@@ -150,6 +190,7 @@ export function GiftManager({ gifts }: { gifts: Gift[] }) {
 
       // se estava editando esse item, limpa o formulário
       if (editingId === gift.id) resetForm()
+      await revalidateGifts()
       router.refresh()
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao remover o presente.")
@@ -158,10 +199,27 @@ export function GiftManager({ gifts }: { gifts: Gift[] }) {
     }
   }
 
-  const previewUrl = file ? URL.createObjectURL(file) : currentImageUrl
+  const previewUrl = filePreview ?? currentImageUrl
 
   return (
     <section className="bg-card rounded-lg shadow-sm overflow-hidden">
+      {cropping && (
+        <ImageCropper
+          file={cropping}
+          aspect={IMAGE_ASPECT}
+          outputWidth={IMAGE_OUTPUT_WIDTH}
+          onCancel={() => {
+            setCropping(null)
+            // desistiu do recorte sem ter nenhuma imagem pronta: limpa a seleção
+            if (!file) setRawFile(null)
+          }}
+          onConfirm={(cropped) => {
+            setFile(cropped)
+            setCropping(null)
+          }}
+        />
+      )}
+
       <div className="p-5 border-b border-border">
         <h2 className="font-medium text-foreground flex items-center gap-2">
           <GiftIcon className="w-4 h-4 text-primary" />
@@ -244,7 +302,10 @@ export function GiftManager({ gifts }: { gifts: Gift[] }) {
           </label>
           <div className="flex items-center gap-3">
             {previewUrl && (
-              <div className="relative w-16 h-16 shrink-0 rounded-md overflow-hidden bg-secondary border border-border">
+              <div
+                className="relative w-16 shrink-0 rounded-md overflow-hidden bg-secondary border border-border"
+                style={{ aspectRatio: String(IMAGE_ASPECT) }}
+              >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={previewUrl} alt="Prévia" className="w-full h-full object-cover" />
               </div>
@@ -253,13 +314,45 @@ export function GiftManager({ gifts }: { gifts: Gift[] }) {
               ref={fileInputRef}
               type="file"
               accept="image/*"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              onChange={(e) => {
+                const chosen = e.target.files?.[0] ?? null
+                // o recorte acontece antes de virar a imagem definitiva
+                if (chosen) {
+                  setRawFile(chosen)
+                  setCropping(chosen)
+                }
+                e.target.value = ""
+              }}
               className="block w-full text-sm text-muted-foreground file:mr-3 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:bg-secondary file:text-foreground hover:file:bg-primary/20 file:cursor-pointer"
             />
           </div>
-          {file && (
-            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-              <ImagePlus className="w-3 h-3" /> {file.name}
+          {file ? (
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                <ImagePlus className="w-3 h-3" /> Recortada em {IMAGE_OUTPUT_WIDTH}×
+                {Math.round(IMAGE_OUTPUT_WIDTH / IMAGE_ASPECT)}px
+              </p>
+              {rawFile && (
+                <button
+                  type="button"
+                  onClick={() => setCropping(rawFile)}
+                  className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary"
+                >
+                  <Crop className="w-3 h-3" /> Ajustar recorte
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={clearImageSelection}
+                className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive"
+              >
+                <X className="w-3 h-3" /> Remover
+              </button>
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground mt-1.5">
+              Ao escolher uma foto você define o recorte — ela é salva sempre em{" "}
+              {IMAGE_OUTPUT_WIDTH}×{Math.round(IMAGE_OUTPUT_WIDTH / IMAGE_ASPECT)}px.
             </p>
           )}
         </div>

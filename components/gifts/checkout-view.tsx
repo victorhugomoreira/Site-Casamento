@@ -13,6 +13,8 @@ import {
   Loader2,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
+import { formatPriceExact } from "@/lib/format"
+import { useCopy } from "@/hooks/use-copy"
 import type { Gift } from "@/lib/supabase/types"
 
 type PixData = {
@@ -22,13 +24,6 @@ type PixData = {
   ticket_url: string | null
 }
 
-function formatPrice(price: number) {
-  return Number(price).toLocaleString("pt-BR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })
-}
-
 export function CheckoutView({ gift }: { gift: Gift }) {
   const supabase = createClient()
 
@@ -36,7 +31,7 @@ export function CheckoutView({ gift }: { gift: Gift }) {
   const [loading, setLoading] = useState(false)
   const [pix, setPix] = useState<PixData | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [copied, setCopied] = useState(false)
+  const { copied, copy } = useCopy()
 
   const [payerName, setPayerName] = useState("")
   const [payerEmail, setPayerEmail] = useState("")
@@ -62,13 +57,6 @@ export function CheckoutView({ gift }: { gift: Gift }) {
     } finally {
       setLoading(false)
     }
-  }
-
-  function copyCode() {
-    if (!pix?.qr_code) return
-    navigator.clipboard.writeText(pix.qr_code)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
   }
 
   return (
@@ -102,7 +90,7 @@ export function CheckoutView({ gift }: { gift: Gift }) {
         <div className="bg-card rounded-lg border border-border shadow-sm p-4 flex items-center gap-4">
           <div className="relative w-20 h-20 shrink-0 rounded-md overflow-hidden bg-secondary">
             {gift.image_url ? (
-              <Image src={gift.image_url} alt={gift.name} fill className="object-cover" />
+              <Image src={gift.image_url} alt={gift.name} fill sizes="80px" className="object-cover" />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">
                 <GiftIcon className="w-8 h-8 text-primary/40" />
@@ -117,7 +105,7 @@ export function CheckoutView({ gift }: { gift: Gift }) {
           </div>
           <div className="text-right shrink-0">
             <p className="text-xs text-muted-foreground">Valor</p>
-            <p className="text-xl font-semibold text-primary">R$ {formatPrice(gift.price)}</p>
+            <p className="text-xl font-semibold text-primary">R$ {formatPriceExact(gift.price)}</p>
           </div>
         </div>
 
@@ -208,7 +196,7 @@ export function CheckoutView({ gift }: { gift: Gift }) {
                 )}
 
                 <p className="text-2xl font-semibold text-primary">
-                  R$ {formatPrice(pix.amount ?? gift.price)}
+                  R$ {formatPriceExact(pix.amount ?? gift.price)}
                 </p>
 
                 {pix.qr_code && (
@@ -218,7 +206,7 @@ export function CheckoutView({ gift }: { gift: Gift }) {
                         {pix.qr_code}
                       </code>
                       <button
-                        onClick={copyCode}
+                        onClick={() => pix.qr_code && copy(pix.qr_code)}
                         className="p-2 hover:bg-background rounded-md transition-colors shrink-0"
                         aria-label="Copiar código PIX"
                       >

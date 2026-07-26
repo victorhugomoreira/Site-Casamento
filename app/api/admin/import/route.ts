@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { parseGuestWorkbook } from "@/lib/guest-import"
+import { parseGuestWorkbook, type ParsedHousehold } from "@/lib/guest-import"
 
 export const runtime = "nodejs"
 
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
   const byName = new Map<string, string>()
   for (const h of existing ?? []) byName.set(normalize(h.host_name), h.id)
 
-  const toInsert: Record<string, unknown>[] = []
+  const toInsert: ParsedHousehold[] = []
   let updated = 0
 
   for (const h of parsed) {

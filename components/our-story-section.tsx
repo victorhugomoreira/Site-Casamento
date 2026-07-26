@@ -1,23 +1,21 @@
 import Image from "next/image"
+import { SectionHeader } from "@/components/ui/section-header"
 
 export function OurStorySection() {
   return (
     <section id="nossa-historia" className="py-20 md:py-32 bg-background">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="text-center mb-16">
-          <h2 className="font-[family-name:var(--font-great-vibes)] text-5xl md:text-6xl text-primary mb-4">
-            Nossa História
-          </h2>
-        </div>
+        <SectionHeader title="Nossa História" />
 
         {/* Timeline */}
         <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
           <div className="relative aspect-[4/5] rounded-lg overflow-hidden">
             <Image
-              src="/images/SGF_2158.jpg"
+              src="/images/nossa-historia.webp"
               alt="Bruna e Victor Hugo"
               fill
+              sizes="(max-width: 768px) 100vw, 50vw"
+              loading="lazy"
               className="object-cover"
             />
           </div>
