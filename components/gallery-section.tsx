@@ -4,24 +4,15 @@ import Image from "next/image"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { SectionHeader } from "@/components/ui/section-header"
-
-const GALLERY_FILES = [
-  "SGF_2190", "SGF_1181", "SGF_1366", "SGF_1398", "SGF_1538",
-  "SGF_1548", "SGF_1586", "SGF_1915", "SGF_1925", "SGF_1944",
-  "SGF_2031", "SGF_2057", "SGF_2232",
-]
-
-const galleryImages = GALLERY_FILES.map((name, i) => ({
-  src: `/images/carrocel/${name}.webp`,
-  alt: `Bruna e Victor Hugo - Foto ${i + 1}`,
-}))
+import type { GalleryImage } from "@/lib/gallery"
 
 const AUTOPLAY_MS = 4000
 const SWIPE_THRESHOLD = 50
 /** Quantos slides à frente/atrás já ficam baixados (o resto só carrega ao chegar perto). */
 const PRELOAD_RADIUS = 1
 
-export function GallerySection() {
+/** As fotos vêm do Supabase (painel dos noivos) — ver `lib/gallery.ts`. */
+export function GallerySection({ images }: { images: GalleryImage[] }) {
   const [current, setCurrent] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
 
@@ -30,14 +21,14 @@ export function GallerySection() {
    * encolhe, então voltar um slide não baixa a imagem de novo.
    */
   const [loaded, setLoaded] = useState<Set<number>>(
-    () => new Set([galleryImages.length - 1, 0, 1]),
+    () => new Set([images.length - 1, 0, 1]),
   )
 
   // Estado do arraste (dedo no celular ou mouse no notebook)
   const dragStartX = useRef<number | null>(null)
   const [dragOffset, setDragOffset] = useState(0)
 
-  const total = galleryImages.length
+  const total = images.length
 
   const goTo = useCallback(
     (index: number) => setCurrent((index + total) % total),
@@ -48,6 +39,7 @@ export function GallerySection() {
 
   // Libera os vizinhos do slide atual para download
   useEffect(() => {
+    if (!total) return
     setLoaded((prev) => {
       const next = new Set(prev)
       for (let d = -PRELOAD_RADIUS; d <= PRELOAD_RADIUS; d++) {
@@ -59,7 +51,7 @@ export function GallerySection() {
 
   // Passagem automática
   useEffect(() => {
-    if (isPaused) return
+    if (isPaused || !total) return
     const id = setInterval(() => setCurrent((c) => (c + 1) % total), AUTOPLAY_MS)
     return () => clearInterval(id)
   }, [isPaused, total])
@@ -92,6 +84,9 @@ export function GallerySection() {
     setIsPaused(false)
   }
 
+  // Galeria vazia: some com a seção em vez de mostrar uma moldura em branco.
+  if (total === 0) return null
+
   return (
     <section id="galeria" className="py-20 md:py-32 bg-background">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
@@ -118,9 +113,9 @@ export function GallerySection() {
             onPointerLeave={endDrag}
             onPointerCancel={endDrag}
           >
-            {galleryImages.map((image, index) => (
+            {images.map((image, index) => (
               <div
-                key={index}
+                key={image.src}
                 className="relative w-full shrink-0 h-[60vh] md:h-[80vh] bg-secondary"
                 aria-hidden={index !== current}
               >
@@ -159,9 +154,9 @@ export function GallerySection() {
 
         {/* Indicadores */}
         <div className="flex items-center justify-center gap-2 mt-6">
-          {galleryImages.map((_, index) => (
+          {images.map((image, index) => (
             <button
-              key={index}
+              key={image.src}
               onClick={() => goTo(index)}
               className={`h-2 rounded-full transition-all ${
                 index === current ? "w-6 bg-primary" : "w-2 bg-primary/30 hover:bg-primary/50"

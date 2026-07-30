@@ -2,11 +2,12 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Users, Gift } from "lucide-react"
+import { Users, Gift, Images } from "lucide-react"
 
 const links = [
   { href: "/admin/convidados", label: "Convidados", icon: Users },
   { href: "/admin/presentes", label: "Presentes", icon: Gift },
+  { href: "/admin/galeria", label: "Galeria", icon: Images },
 ]
 
 export function AdminNav() {

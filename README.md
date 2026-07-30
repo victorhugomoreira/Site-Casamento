@@ -33,7 +33,8 @@ O fluxo correto:
 
 1. Coloque os arquivos originais em `../_originais-fotos/`, seguindo a estrutura:
    - raiz → `hero`, `nossa-historia`, cards de local
-   - `carrocel/` → fotos da galeria
+   - `carrocel/` → fotos iniciais da galeria (hoje a galeria é editada no
+     `/admin/galeria`; estas ficam como reserva — ver README-ADMIN.md)
    - `gifts/` → imagens de presentes
 2. Rode `npm run otimizar-imagens`
 
@@ -52,7 +53,8 @@ Imagens que não são usadas no site ficam em `_originais-fotos/_nao-usadas/`.
 - Imagens: 7 dias "fresco" + 30 dias servindo do cache enquanto revalida
   (`next.config.mjs`). Quem já visitou o site recarrega instantaneamente.
 - Home e `/presentes`: páginas estáticas revalidadas a cada 5 min. Ao editar a lista
-  no admin, o cache é derrubado na hora (`app/actions.ts`), sem esperar os 5 min.
+  de presentes ou a galeria no admin, o cache é derrubado na hora (`app/actions.ts`),
+  sem esperar os 5 min.
 
 ## Learn More
 

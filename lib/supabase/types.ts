@@ -35,6 +35,15 @@ export interface Gift {
   updated_at: string
 }
 
+export interface GalleryPhoto {
+  id: string
+  image_url: string
+  caption: string | null
+  sort_order: number
+  created_at: string
+  updated_at: string
+}
+
 /** Dados mínimos expostos publicamente no fluxo de RSVP (sem telefone, sem lista completa). */
 export interface PublicHousehold {
   id: string

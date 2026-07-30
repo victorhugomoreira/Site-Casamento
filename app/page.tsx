@@ -8,15 +8,18 @@ import { GiftsSection } from "@/components/gifts-section"
 import { RecommendationsSection } from "@/components/recommendations-section"
 import { FAQSection } from "@/components/faq-section"
 import { Footer } from "@/components/footer"
+import { getGalleryImages } from "@/lib/gallery"
 
-export default function WeddingPage() {
+export default async function WeddingPage() {
+  const galleryImages = await getGalleryImages()
+
   return (
     <main className="min-h-screen">
       <Navigation />
       <HeroSection />
       <OurStorySection />
       <EventSection />
-      <GallerySection />
+      <GallerySection images={galleryImages} />
       <RSVPSection />
       <GiftsSection />
       <RecommendationsSection />

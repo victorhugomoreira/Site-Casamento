@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "otimizar-imagens": "node scripts/otimizar-imagens.mjs"
+    "otimizar-imagens": "node scripts/otimizar-imagens.mjs",
+    "enviar-galeria": "node --env-file=.env.local scripts/enviar-galeria.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
