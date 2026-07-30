@@ -55,6 +55,26 @@ Deno.serve(async (req) => {
       return json({ error: "Não autorizado." }, 401)
     }
 
+    const admin = createClient(
+      supabaseUrl,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    )
+
+    // 2) Estar logado não basta: precisa constar em admin_users. Consultamos
+    //    com a service_role para a resposta não depender de RLS.
+    const { data: isAdmin } = await admin
+      .from("admin_users")
+      .select("user_id")
+      .eq("user_id", userData.user.id)
+      .maybeSingle()
+
+    if (!isAdmin) {
+      console.warn(
+        `Estorno negado: ${userData.user.email ?? userData.user.id} nao e admin.`,
+      )
+      return json({ error: "Você não tem permissão para estornar." }, 403)
+    }
+
     const { payment_id } = await req.json().catch(() => ({}))
     if (typeof payment_id !== "string" || !UUID_RE.test(payment_id)) {
       return json({ error: "payment_id inválido." }, 400)
@@ -64,11 +84,6 @@ Deno.serve(async (req) => {
     if (!mpToken) {
       return json({ error: "Pagamento não configurado (token ausente)." }, 500)
     }
-
-    const admin = createClient(
-      supabaseUrl,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    )
 
     const { data: payment, error } = await admin
       .from("payments")
@@ -117,6 +132,8 @@ Deno.serve(async (req) => {
       .update({
         status: "refunded",
         status_detail: `estornado por ${userData.user.email ?? userData.user.id}`,
+        refunded_by: userData.user.id,
+        refunded_at: new Date().toISOString(),
         paid_at: null,
       })
       .eq("id", payment.id)
