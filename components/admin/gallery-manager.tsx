@@ -26,8 +26,8 @@ const BUCKET = "gallery-images"
 const MAX_SIDE = 1600
 const QUALITY = 0.82
 
-/** Formato do recorte opcional: retrato, igual às fotos que já estão no site. */
-const CROP_ASPECT = 3 / 4
+/** Formato do recorte opcional: retrato 2:3, igual às fotos que já estão no site. */
+const CROP_ASPECT = 2 / 3
 const CROP_OUTPUT_WIDTH = 1200
 
 /** Extrai o caminho do arquivo dentro do bucket a partir da URL pública. */

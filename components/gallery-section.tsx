@@ -92,9 +92,15 @@ export function GallerySection({ images }: { images: GalleryImage[] }) {
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
         <SectionHeader title="Galeria" subtitle="Momentos especiais da nossa jornada" />
 
-        {/* Carrossel */}
+        {/*
+          Carrossel — as fotos são retrato (2:3). No mobile a moldura ocupa a
+          largura toda (leve corte é aceitável); a partir do desktop ela vira um
+          quadro 2:3 centralizado do tamanho da altura disponível, senão o
+          object-cover esticaria a foto numa janela bem mais larga que alta e
+          cortaria a maior parte da imagem.
+        */}
         <div
-          className="relative overflow-hidden rounded-lg select-none"
+          className="relative overflow-hidden rounded-lg select-none mx-auto h-[60vh] w-full md:h-[80vh] md:w-[min(calc(80vh*2/3),100%)]"
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
           role="region"
@@ -116,7 +122,7 @@ export function GallerySection({ images }: { images: GalleryImage[] }) {
             {images.map((image, index) => (
               <div
                 key={image.src}
-                className="relative w-full shrink-0 h-[60vh] md:h-[80vh] bg-secondary"
+                className="relative w-full h-full shrink-0 bg-secondary"
                 aria-hidden={index !== current}
               >
                 {loaded.has(index) && (
