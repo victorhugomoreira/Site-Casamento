@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
   ArrowLeft,
   Gift as GiftIcon,
@@ -11,6 +11,8 @@ import {
   Copy,
   Check,
   Loader2,
+  CheckCircle2,
+  Clock,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { formatPriceExact } from "@/lib/format"
@@ -18,18 +20,24 @@ import { useCopy } from "@/hooks/use-copy"
 import type { Gift } from "@/lib/supabase/types"
 
 type PixData = {
+  payment_id: string
   qr_code: string | null
   qr_code_base64: string | null
   amount: number
   ticket_url: string | null
+  expires_at: string | null
 }
 
+/** De quanto em quanto tempo perguntamos ao Supabase se o PIX já caiu. */
+const POLL_MS = 5000
+
 export function CheckoutView({ gift }: { gift: Gift }) {
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   const [method, setMethod] = useState<"pix" | "card">("pix")
   const [loading, setLoading] = useState(false)
   const [pix, setPix] = useState<PixData | null>(null)
+  const [status, setStatus] = useState<"pending" | "paid" | "expired">("pending")
   const [error, setError] = useState<string | null>(null)
   const { copied, copy } = useCopy()
 
@@ -49,6 +57,7 @@ export function CheckoutView({ gift }: { gift: Gift }) {
       })
       if (error) throw error
       if (data?.error) throw new Error(data.error)
+      setStatus("pending")
       setPix(data as PixData)
     } catch (e) {
       setError(
@@ -58,6 +67,27 @@ export function CheckoutView({ gift }: { gift: Gift }) {
       setLoading(false)
     }
   }
+
+  // Enquanto o QR Code está na tela, pergunta ao Supabase se o pagamento caiu.
+  // Quem confirma é o webhook do Mercado Pago; aqui só lemos o resultado.
+  useEffect(() => {
+    if (!pix || status !== "pending") return
+
+    let cancelled = false
+    const timer = setInterval(async () => {
+      const { data } = await supabase.functions.invoke("pix-payment-status", {
+        body: { payment_id: pix.payment_id },
+      })
+      if (cancelled || !data) return
+      if (data.paid) setStatus("paid")
+      else if (data.expired) setStatus("expired")
+    }, POLL_MS)
+
+    return () => {
+      cancelled = true
+      clearInterval(timer)
+    }
+  }, [pix, status, supabase])
 
   return (
     <main className="min-h-screen bg-background">
@@ -178,13 +208,53 @@ export function CheckoutView({ gift }: { gift: Gift }) {
                   {loading ? "Gerando PIX..." : "Gerar QR Code PIX"}
                 </button>
               </div>
+            ) : status === "paid" ? (
+              <div className="text-center space-y-3 py-4">
+                <CheckCircle2 className="w-14 h-14 text-primary mx-auto" />
+                <h3 className="text-2xl font-medium text-foreground">
+                  Pagamento confirmado!
+                </h3>
+                <p className="text-2xl font-semibold text-primary">
+                  R$ {formatPriceExact(pix.amount ?? gift.price)}
+                </p>
+                <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                  Recebemos o seu presente e não temos palavras para agradecer. Ver
+                  vocês com a gente nesse dia já é o maior presente. 🤍
+                </p>
+                <Link
+                  href="/presentes"
+                  className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-3 rounded-md hover:bg-accent transition-colors font-medium"
+                >
+                  Voltar para a lista
+                </Link>
+              </div>
             ) : (
               <div className="text-center space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  Escaneie o QR Code no app do seu banco ou use o código copia e cola.
-                </p>
+                {status === "expired" ? (
+                  <div className="flex flex-col items-center gap-3 py-2">
+                    <Clock className="w-10 h-10 text-muted-foreground" />
+                    <p className="text-foreground font-medium">Este QR Code expirou</p>
+                    <p className="text-sm text-muted-foreground">
+                      Nenhuma cobrança foi feita. Gere um novo para continuar.
+                    </p>
+                    <button
+                      onClick={() => {
+                        setPix(null)
+                        setStatus("pending")
+                      }}
+                      className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-3 rounded-md hover:bg-accent transition-colors font-medium"
+                    >
+                      <QrCode className="w-5 h-5" />
+                      Gerar novo QR Code
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Escaneie o QR Code no app do seu banco ou use o código copia e cola.
+                  </p>
+                )}
 
-                {pix.qr_code_base64 && (
+                {status === "pending" && pix.qr_code_base64 && (
                   <div className="flex justify-center">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
@@ -195,11 +265,13 @@ export function CheckoutView({ gift }: { gift: Gift }) {
                   </div>
                 )}
 
-                <p className="text-2xl font-semibold text-primary">
-                  R$ {formatPriceExact(pix.amount ?? gift.price)}
-                </p>
+                {status === "pending" && (
+                  <p className="text-2xl font-semibold text-primary">
+                    R$ {formatPriceExact(pix.amount ?? gift.price)}
+                  </p>
+                )}
 
-                {pix.qr_code && (
+                {status === "pending" && pix.qr_code && (
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 bg-secondary rounded-lg p-3">
                       <code className="text-foreground text-xs flex-1 truncate text-left">
@@ -221,10 +293,12 @@ export function CheckoutView({ gift }: { gift: Gift }) {
                   </div>
                 )}
 
-                <p className="text-xs text-muted-foreground">
-                  Após o pagamento, a confirmação pode levar alguns instantes. Muito obrigado
-                  pelo carinho! 🤍
-                </p>
+                {status === "pending" && (
+                  <p className="inline-flex items-center gap-2 text-xs text-muted-foreground">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Aguardando o pagamento — esta tela confirma sozinha assim que cair.
+                  </p>
+                )}
               </div>
             )}
           </div>

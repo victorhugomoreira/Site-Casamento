@@ -21,3 +21,5 @@ lista/
 
 # Fotos originais da câmera (backup local — as versões otimizadas ficam em public/images)
 _originais-fotos/
+# Supabase CLI
+supabase/.temp/
