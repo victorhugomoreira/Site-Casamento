@@ -33,14 +33,9 @@ export default async function ConviteTokenPage({
   return (
     <InviteCard
       greeting={
-        <>
-          <p className="text-xs tracking-[0.3em] uppercase text-muted-foreground mb-3">
-            Olá, {firstName}
-          </p>
-          <p className="font-[family-name:var(--font-great-vibes)] text-4xl md:text-5xl text-primary">
-            Este convite é especialmente para você
-          </p>
-        </>
+        <p className="text-xs tracking-[0.3em] uppercase text-muted-foreground">
+          Olá, {firstName} — este convite é especialmente para você
+        </p>
       }
     >
       <RsvpConfirmForm household={household} token={token} />

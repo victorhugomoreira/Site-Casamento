@@ -6,6 +6,11 @@ export const WEDDING = {
   dateLabel: "10 . 10 . 2026",
   dateLong: "Sábado, 10 de Outubro de 2026",
   dateShort: "10 de Outubro de 2026",
+  /** Data quebrada em partes — usada no selo de data do convite. */
+  dayOfWeek: "Sábado",
+  dayNumber: "10",
+  month: "Outubro",
+  year: "2026",
   time: "11:00 da manhã",
   city: "Campo Grande - MS",
   rsvpDeadline: "10 de setembro de 2026",
