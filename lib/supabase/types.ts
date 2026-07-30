@@ -44,6 +44,24 @@ export interface GalleryPhoto {
   updated_at: string
 }
 
+/** Uma cobrança PIX gerada no checkout. Escrita só pelas Edge Functions. */
+export interface Payment {
+  id: string
+  gift_id: string | null
+  gift_name: string | null
+  mp_payment_id: string | null
+  status: string
+  status_detail: string | null
+  amount: number
+  payer_name: string | null
+  payer_email: string | null
+  message: string | null
+  expires_at: string | null
+  paid_at: string | null
+  created_at: string
+  updated_at: string
+}
+
 /** Dados mínimos expostos publicamente no fluxo de RSVP (sem telefone, sem lista completa). */
 export interface PublicHousehold {
   id: string
