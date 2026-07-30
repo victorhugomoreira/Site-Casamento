@@ -21,7 +21,7 @@ export default async function RecebidosPage() {
 
   // A policy de `payments` libera SELECT para autenticado, então o próprio
   // client do admin já enxerga — não precisa de service_role aqui.
-  const [{ data: pagos }, { data: pendentes }] = await Promise.all([
+  const [{ data: pagos }, { data: pendentes }, { data: estornados }] = await Promise.all([
     supabase
       .from("payments")
       .select("*")
@@ -33,12 +33,18 @@ export default async function RecebidosPage() {
       .in("status", EM_ABERTO)
       .gt("expires_at", new Date().toISOString())
       .order("created_at", { ascending: false }),
+    supabase
+      .from("payments")
+      .select("*")
+      .eq("status", "refunded")
+      .order("updated_at", { ascending: false }),
   ])
 
   return (
     <PaymentsReceived
       paid={(pagos ?? []) as Payment[]}
       pending={(pendentes ?? []) as Payment[]}
+      refunded={(estornados ?? []) as Payment[]}
     />
   )
 }

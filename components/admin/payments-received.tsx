@@ -1,5 +1,6 @@
-import { Gift as GiftIcon, Clock, Wallet } from "lucide-react"
+import { Gift as GiftIcon, Clock, Wallet, Undo2 } from "lucide-react"
 import { formatPriceExact } from "@/lib/format"
+import { RefundButton } from "@/components/admin/refund-button"
 import type { Payment } from "@/lib/supabase/types"
 
 /** "2026-07-30T03:12:00Z" -> "30/07 às 00:12" (horário de Brasília). */
@@ -41,9 +42,11 @@ function Stat({
 export function PaymentsReceived({
   paid,
   pending,
+  refunded,
 }: {
   paid: Payment[]
   pending: Payment[]
+  refunded: Payment[]
 }) {
   const total = paid.reduce((sum, p) => sum + Number(p.amount), 0)
   const media = paid.length ? total / paid.length : 0
@@ -96,6 +99,7 @@ export function PaymentsReceived({
                   <th className="text-left font-medium px-5 py-3">Presente</th>
                   <th className="text-left font-medium px-5 py-3">Quem presenteou</th>
                   <th className="text-right font-medium px-5 py-3">Valor</th>
+                  <th className="text-right font-medium px-5 py-3 w-px"></th>
                 </tr>
               </thead>
               <tbody>
@@ -121,6 +125,13 @@ export function PaymentsReceived({
                     <td className="px-5 py-3 text-right font-medium text-primary whitespace-nowrap">
                       R$ {formatPriceExact(Number(p.amount))}
                     </td>
+                    <td className="px-5 py-3 text-right whitespace-nowrap">
+                      <RefundButton
+                        paymentId={p.id}
+                        amount={Number(p.amount)}
+                        giftName={p.gift_name}
+                      />
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -128,6 +139,34 @@ export function PaymentsReceived({
           </div>
         )}
       </section>
+
+      {/* Estornados — ficam visíveis para o histórico não sumir sem explicação. */}
+      {refunded.length > 0 && (
+        <section className="bg-card rounded-lg border border-border shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-border flex items-center gap-2">
+            <Undo2 className="w-4 h-4 text-muted-foreground" />
+            <h2 className="font-medium text-foreground">Estornados</h2>
+          </div>
+          <p className="px-5 pt-4 text-xs text-muted-foreground">
+            Valores devolvidos a quem pagou. Não entram no total recebido.
+          </p>
+          <ul className="divide-y divide-border mt-2">
+            {refunded.map((p) => (
+              <li key={p.id} className="px-5 py-3 flex items-center justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="text-foreground truncate">{p.gift_name ?? "—"}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {p.payer_name ?? "Anônimo"} · {formatMoment(p.created_at)}
+                  </p>
+                </div>
+                <span className="text-muted-foreground line-through whitespace-nowrap">
+                  R$ {formatPriceExact(Number(p.amount))}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* Aguardando pagamento */}
       {pending.length > 0 && (
