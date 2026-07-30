@@ -56,7 +56,9 @@ Deno.serve(async (req) => {
 
     const { data: payment, error } = await supabase
       .from("payments")
-      .select("id, status, amount, gift_name, mp_payment_id, paid_at, expires_at")
+      .select(
+        "id, gift_id, status, amount, gift_name, mp_payment_id, paid_at, expires_at, qr_code, qr_code_base64, ticket_url",
+      )
       .eq("id", payment_id)
       .single()
 
@@ -99,15 +101,24 @@ Deno.serve(async (req) => {
     const expired =
       !!payment.expires_at && new Date(payment.expires_at).getTime() < Date.now()
 
+    const stillOpen = OPEN.has(status) && !expired
+
     return json({
       payment_id: payment.id,
+      gift_id: payment.gift_id,
       status,
       paid: APPROVED.has(status),
-      pending: OPEN.has(status) && !expired,
+      pending: stillOpen,
       expired: expired && OPEN.has(status),
       amount: Number(payment.amount),
       gift_name: payment.gift_name,
       paid_at: paidAt,
+      expires_at: payment.expires_at,
+      // Devolve o QR só enquanto ele ainda vale, para o convidado recuperar a
+      // cobrança se recarregar a página ou voltar depois.
+      qr_code: stillOpen ? payment.qr_code : null,
+      qr_code_base64: stillOpen ? payment.qr_code_base64 : null,
+      ticket_url: stillOpen ? payment.ticket_url : null,
     })
   } catch (e) {
     return json({ error: "Erro inesperado.", details: String(e) }, 500)

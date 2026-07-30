@@ -17,6 +17,7 @@ import {
 import { createClient } from "@/lib/supabase/client"
 import { formatPriceExact } from "@/lib/format"
 import { useCopy } from "@/hooks/use-copy"
+import { buscarPendente, removerPendente, salvarPendente } from "@/lib/pix-pendentes"
 import type { Gift } from "@/lib/supabase/types"
 
 type PixData = {
@@ -72,6 +73,10 @@ export function CheckoutView({ gift }: { gift: Gift }) {
   const [pix, setPix] = useState<PixData | null>(null)
   const [status, setStatus] = useState<"pending" | "paid" | "expired">("pending")
   const [error, setError] = useState<string | null>(null)
+  /** True enquanto verificamos se existe cobrança em aberto deste navegador. */
+  const [restaurando, setRestaurando] = useState(true)
+  /** True quando o QR na tela veio de uma cobrança anterior, não de agora. */
+  const [recuperado, setRecuperado] = useState(false)
   const { copied, copy } = useCopy()
 
   const [payerName, setPayerName] = useState("")
@@ -98,8 +103,17 @@ export function CheckoutView({ gift }: { gift: Gift }) {
       })
       if (error) throw error
       if (data?.error) throw new Error(data.error)
+      const novo = data as PixData
       setStatus("pending")
-      setPix(data as PixData)
+      setRecuperado(false)
+      setPix(novo)
+      salvarPendente({
+        payment_id: novo.payment_id,
+        gift_id: gift.id,
+        gift_name: gift.name,
+        amount: novo.amount ?? gift.price,
+        expires_at: novo.expires_at,
+      })
     } catch (e) {
       setError(
         e instanceof Error ? e.message : "Não foi possível gerar o PIX. Tente novamente.",
@@ -120,6 +134,42 @@ export function CheckoutView({ gift }: { gift: Gift }) {
     return () => el.remove()
   }, [])
 
+  // Se este navegador já gerou uma cobrança para este presente e ela ainda
+  // vale, recupera o QR em vez de deixar o convidado gerar outra à toa.
+  useEffect(() => {
+    const pendente = buscarPendente(gift.id)
+    if (!pendente) {
+      setRestaurando(false)
+      return
+    }
+
+    let cancelled = false
+    void (async () => {
+      const { data } = await supabase.functions.invoke("pix-payment-status", {
+        body: { payment_id: pendente.payment_id },
+      })
+      if (cancelled) return
+
+      if (data?.paid) {
+        setPix(data as PixData)
+        setStatus("paid")
+        removerPendente(pendente.payment_id)
+      } else if (data?.pending && data.qr_code) {
+        setPix(data as PixData)
+        setStatus("pending")
+        setRecuperado(true)
+      } else {
+        // Expirou, foi cancelada ou recusada: começa do zero.
+        removerPendente(pendente.payment_id)
+      }
+      setRestaurando(false)
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [gift.id, supabase])
+
   // Enquanto o QR Code está na tela, pergunta ao Supabase se o pagamento caiu.
   // Quem confirma é o webhook do Mercado Pago; aqui só lemos o resultado.
   useEffect(() => {
@@ -131,8 +181,13 @@ export function CheckoutView({ gift }: { gift: Gift }) {
         body: { payment_id: pix.payment_id },
       })
       if (cancelled || !data) return
-      if (data.paid) setStatus("paid")
-      else if (data.expired) setStatus("expired")
+      if (data.paid) {
+        setStatus("paid")
+        removerPendente(pix.payment_id)
+      } else if (data.expired) {
+        setStatus("expired")
+        removerPendente(pix.payment_id)
+      }
     }, POLL_MS)
 
     return () => {
@@ -223,7 +278,12 @@ export function CheckoutView({ gift }: { gift: Gift }) {
         {/* Painel PIX */}
         {method === "pix" && (
           <div className="bg-card rounded-lg border border-border shadow-sm p-6">
-            {!pix ? (
+            {restaurando ? (
+              <div className="flex items-center justify-center gap-3 py-8 text-muted-foreground">
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span className="text-sm">Verificando se você já tem um PIX em aberto...</span>
+              </div>
+            ) : !pix ? (
               <div className="space-y-4">
                 <p className="text-sm text-muted-foreground">
                   Geramos um QR Code PIX no valor do presente. O nome e o CPF são
@@ -307,14 +367,21 @@ export function CheckoutView({ gift }: { gift: Gift }) {
                     </p>
                     <button
                       onClick={() => {
+                        removerPendente(pix.payment_id)
                         setPix(null)
                         setStatus("pending")
+                        setRecuperado(false)
                       }}
                       className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-3 rounded-md hover:bg-accent transition-colors font-medium"
                     >
                       <QrCode className="w-5 h-5" />
                       Gerar novo QR Code
                     </button>
+                  </div>
+                ) : recuperado ? (
+                  <div className="rounded-md bg-secondary p-3 text-sm text-foreground">
+                    Você já tinha gerado um PIX para este presente e ele ainda é válido —
+                    reaproveitamos o mesmo QR Code para não cobrar duas vezes.
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground">
