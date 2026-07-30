@@ -31,6 +31,13 @@ type PixData = {
 /** De quanto em quanto tempo perguntamos ao Supabase se o PIX já caiu. */
 const POLL_MS = 5000
 
+declare global {
+  interface Window {
+    /** Preenchido pelo security.js do Mercado Pago. */
+    MP_DEVICE_SESSION_ID?: string
+  }
+}
+
 const onlyDigits = (s: string) => s.replace(/\D/g, "")
 
 /** 000.000.000-00 conforme o convidado digita. */
@@ -84,6 +91,9 @@ export function CheckoutView({ gift }: { gift: Gift }) {
           payer_name: payerName.trim(),
           payer_doc: onlyDigits(payerDoc),
           payer_email: payerEmail || undefined,
+          // Identificador do dispositivo: o antifraude do Mercado Pago usa
+          // isso para não recusar pagamento legítimo por falta de contexto.
+          device_id: window.MP_DEVICE_SESSION_ID,
         },
       })
       if (error) throw error
@@ -98,6 +108,17 @@ export function CheckoutView({ gift }: { gift: Gift }) {
       setLoading(false)
     }
   }
+
+  // O security.js do Mercado Pago preenche window.MP_DEVICE_SESSION_ID, que o
+  // antifraude deles usa para não recusar pagamento legítimo. Injetamos na mão
+  // porque o next/script não aceita o atributo `view` que o script exige.
+  useEffect(() => {
+    const el = document.createElement("script")
+    el.src = "https://www.mercadopago.com/v2/security.js"
+    el.setAttribute("view", "checkout")
+    document.body.appendChild(el)
+    return () => el.remove()
+  }, [])
 
   // Enquanto o QR Code está na tela, pergunta ao Supabase se o pagamento caiu.
   // Quem confirma é o webhook do Mercado Pago; aqui só lemos o resultado.

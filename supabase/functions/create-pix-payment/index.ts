@@ -105,7 +105,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json().catch(() => ({}))
-    const { gift_id, payer_name, payer_email, payer_doc, message } = body
+    const { gift_id, payer_name, payer_email, payer_doc, device_id, message } = body
 
     if (!gift_id || typeof gift_id !== "string") {
       return json({ error: "gift_id é obrigatório." }, 400)
@@ -182,13 +182,20 @@ Deno.serve(async (req) => {
     // 3) Cria a cobrança PIX no Mercado Pago.
     const { first, last } = splitName(name)
 
+    // O Device ID vem do security.js rodando no checkout. É opcional na API,
+    // mas sem ele o antifraude tem menos contexto e recusa mais.
+    const mpHeaders: Record<string, string> = {
+      Authorization: `Bearer ${mpToken}`,
+      "Content-Type": "application/json",
+      "X-Idempotency-Key": payment.id,
+    }
+    if (typeof device_id === "string" && device_id.trim()) {
+      mpHeaders["X-meli-session-id"] = device_id.trim()
+    }
+
     const mpRes = await fetch("https://api.mercadopago.com/v1/payments", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${mpToken}`,
-        "Content-Type": "application/json",
-        "X-Idempotency-Key": payment.id,
-      },
+      headers: mpHeaders,
       body: JSON.stringify({
         transaction_amount: Number(amount.toFixed(2)),
         description: `Presente de casamento: ${gift.name}`,
