@@ -31,6 +31,32 @@ type PixData = {
 /** De quanto em quanto tempo perguntamos ao Supabase se o PIX já caiu. */
 const POLL_MS = 5000
 
+const onlyDigits = (s: string) => s.replace(/\D/g, "")
+
+/** 000.000.000-00 conforme o convidado digita. */
+function formatCpf(value: string) {
+  const d = onlyDigits(value).slice(0, 11)
+  return d
+    .replace(/^(\d{3})(\d)/, "$1.$2")
+    .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
+    .replace(/^(\d{3})\.(\d{3})\.(\d{3})(\d)/, "$1.$2.$3-$4")
+}
+
+/**
+ * Confere os dígitos verificadores só para avisar o convidado antes de enviar.
+ * Quem valida de verdade é a Edge Function.
+ */
+function isValidCpf(value: string) {
+  const cpf = onlyDigits(value)
+  if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false
+  for (const [len, weight] of [[9, 10], [10, 11]] as const) {
+    let sum = 0
+    for (let i = 0; i < len; i++) sum += Number(cpf[i]) * (weight - i)
+    if (((sum * 10) % 11) % 10 !== Number(cpf[len])) return false
+  }
+  return true
+}
+
 export function CheckoutView({ gift }: { gift: Gift }) {
   const supabase = useMemo(() => createClient(), [])
 
@@ -43,6 +69,10 @@ export function CheckoutView({ gift }: { gift: Gift }) {
 
   const [payerName, setPayerName] = useState("")
   const [payerEmail, setPayerEmail] = useState("")
+  const [payerDoc, setPayerDoc] = useState("")
+
+  // O Mercado Pago exige nome e CPF do pagador para liberar a cobrança PIX.
+  const canGenerate = payerName.trim().length > 2 && isValidCpf(payerDoc)
 
   async function generatePix() {
     setError(null)
@@ -51,7 +81,8 @@ export function CheckoutView({ gift }: { gift: Gift }) {
       const { data, error } = await supabase.functions.invoke("create-pix-payment", {
         body: {
           gift_id: gift.id,
-          payer_name: payerName || undefined,
+          payer_name: payerName.trim(),
+          payer_doc: onlyDigits(payerDoc),
           payer_email: payerEmail || undefined,
         },
       })
@@ -174,14 +205,23 @@ export function CheckoutView({ gift }: { gift: Gift }) {
             {!pix ? (
               <div className="space-y-4">
                 <p className="text-sm text-muted-foreground">
-                  Geramos um QR Code PIX no valor do presente. Se quiser, informe seu nome e
-                  e-mail para que os noivos saibam quem presenteou.
+                  Geramos um QR Code PIX no valor do presente. O nome e o CPF são
+                  exigidos pelo banco para emitir a cobrança — e ainda ajudam os noivos
+                  a saber quem presenteou.
                 </p>
                 <div className="grid sm:grid-cols-2 gap-3">
                   <input
                     value={payerName}
                     onChange={(e) => setPayerName(e.target.value)}
-                    placeholder="Seu nome (opcional)"
+                    placeholder="Seu nome completo"
+                    autoComplete="name"
+                    className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  />
+                  <input
+                    value={payerDoc}
+                    onChange={(e) => setPayerDoc(formatCpf(e.target.value))}
+                    placeholder="Seu CPF"
+                    inputMode="numeric"
                     className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
                   />
                   <input
@@ -189,15 +229,22 @@ export function CheckoutView({ gift }: { gift: Gift }) {
                     value={payerEmail}
                     onChange={(e) => setPayerEmail(e.target.value)}
                     placeholder="Seu e-mail (opcional)"
-                    className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    autoComplete="email"
+                    className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 sm:col-span-2"
                   />
                 </div>
+
+                {payerDoc && !isValidCpf(payerDoc) && (
+                  <p className="text-sm text-muted-foreground">
+                    Confira o CPF — os dígitos não batem.
+                  </p>
+                )}
 
                 {error && <p className="text-sm text-destructive">{error}</p>}
 
                 <button
                   onClick={generatePix}
-                  disabled={loading}
+                  disabled={loading || !canGenerate}
                   className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-3 rounded-md hover:bg-accent transition-colors font-medium disabled:opacity-60"
                 >
                   {loading ? (

@@ -48,6 +48,50 @@ function splitName(full: string) {
   return { first: parts[0], last: parts.slice(1).join(" ") }
 }
 
+const digits = (s: string) => s.replace(/\D/g, "")
+
+/** Dígitos verificadores do CPF. */
+function isValidCpf(cpf: string) {
+  if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false
+  for (const [len, weight] of [[9, 10], [10, 11]] as const) {
+    let sum = 0
+    for (let i = 0; i < len; i++) sum += Number(cpf[i]) * (weight - i)
+    const rest = (sum * 10) % 11 % 10
+    if (rest !== Number(cpf[len])) return false
+  }
+  return true
+}
+
+/** Dígitos verificadores do CNPJ. */
+function isValidCnpj(cnpj: string) {
+  if (cnpj.length !== 14 || /^(\d)\1{13}$/.test(cnpj)) return false
+  const check = (len: number) => {
+    let sum = 0
+    let pos = len - 7
+    for (let i = 0; i < len; i++) {
+      sum += Number(cnpj[i]) * pos--
+      if (pos < 2) pos = 9
+    }
+    const rest = sum % 11
+    return rest < 2 ? 0 : 11 - rest
+  }
+  return check(12) === Number(cnpj[12]) && check(13) === Number(cnpj[13])
+}
+
+/**
+ * O Mercado Pago recusa PIX sem documento do pagador (`rejected_high_risk`),
+ * então validamos aqui antes de gastar uma chamada na API deles.
+ * O documento é repassado e NÃO é gravado no banco — não precisamos guardar
+ * CPF de convidado para nada.
+ */
+function parseDoc(raw: unknown): { type: "CPF" | "CNPJ"; number: string } | null {
+  if (typeof raw !== "string") return null
+  const value = digits(raw)
+  if (value.length === 11 && isValidCpf(value)) return { type: "CPF", number: value }
+  if (value.length === 14 && isValidCnpj(value)) return { type: "CNPJ", number: value }
+  return null
+}
+
 /** Validade da cobrança PIX. */
 const EXPIRES_IN_MINUTES = 30
 
@@ -61,10 +105,15 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json().catch(() => ({}))
-    const { gift_id, payer_name, payer_email, message } = body
+    const { gift_id, payer_name, payer_email, payer_doc, message } = body
 
     if (!gift_id || typeof gift_id !== "string") {
       return json({ error: "gift_id é obrigatório." }, 400)
+    }
+
+    const doc = parseDoc(payer_doc)
+    if (!doc) {
+      return json({ error: "Informe um CPF válido." }, 400)
     }
 
     const mpToken = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN")
@@ -147,7 +196,12 @@ Deno.serve(async (req) => {
         external_reference: payment.id,
         notification_url: `${supabaseUrl}/functions/v1/mercadopago-webhook`,
         date_of_expiration: isoWithOffset(expiresAt),
-        payer: { email, first_name: first, last_name: last },
+        payer: {
+          email,
+          first_name: first,
+          last_name: last,
+          identification: { type: doc.type, number: doc.number },
+        },
       }),
     })
 
