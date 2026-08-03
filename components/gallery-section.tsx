@@ -172,11 +172,6 @@ export function GallerySection({ images }: { images: GalleryImage[] }) {
             />
           ))}
         </div>
-
-        {/* Note */}
-        <p className="text-center text-muted-foreground mt-8 text-sm">
-          * Fotos ilustrativas - Em breve compartilharemos nossas fotos oficiais
-        </p>
       </div>
     </section>
   )

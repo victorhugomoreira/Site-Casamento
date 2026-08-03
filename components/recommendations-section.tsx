@@ -49,13 +49,13 @@ const categories: Category[] = [
         bookingUrl: "https://www.booking.com/hotel/br/wr-confort.pt-br.html",
       },
       {
-        name: "ibis budget Campo Grande",
+        name: "Ibis budget Campo Grande",
         address: "Av. Mato Grosso, 5617, Carandá Bosque, Campo Grande - MS, CEP 79031-000",
         mapsUrl: "https://maps.google.com/?q=ibis+budget+Campo+Grande",
         bookingUrl: "https://www.booking.com/hotel/br/ibis-budget-campo-grande.pt-br.html",
       },
       {
-        name: "ibis Campo Grande",
+        name: "Ibis Campo Grande",
         address: "Av. Mato Grosso, 5513, Campo Grande - MS, CEP 79031-000",
         mapsUrl: "https://maps.google.com/?q=ibis+Campo+Grande",
         bookingUrl: "https://www.booking.com/hotel/br/ibis-campo-grande.pt-br.html",

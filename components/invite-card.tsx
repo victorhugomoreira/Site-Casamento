@@ -34,7 +34,6 @@ export function InviteCard({
   greeting?: React.ReactNode
   children?: React.ReactNode
 }) {
-  const [nomeA, nomeB] = WEDDING.couple.split(" & ")
   const rsvpHref = children ? "#rsvp" : "/#confirmar-presenca"
 
   return (
@@ -49,18 +48,14 @@ export function InviteCard({
             {VERSE.reference}
           </p>
 
-          <p className="font-[family-name:var(--font-great-vibes)] text-2xl text-primary/70 mt-10">
-            {nomeA[0]} <span className="text-muted-foreground/50">|</span> {nomeB[0]}
-          </p>
-          <h1 className="font-[family-name:var(--font-great-vibes)] text-5xl md:text-6xl text-primary mt-2 mb-6 text-balance">
+          <h1 className="font-[family-name:var(--font-great-vibes)] text-5xl md:text-6xl text-primary mt-10 mb-6 text-balance">
             {WEDDING.couple}
           </h1>
 
           {greeting && <div className="mb-6">{greeting}</div>}
 
           <p className="text-foreground/80 max-w-sm mx-auto leading-relaxed">
-            Com a bênção de Deus, convidamos você para celebrar o início da nossa história
-            como marido e mulher.
+            Com a bênção de Deus e de nossos pais, convidamos você para celebrar o nosso casamento
           </p>
         </Reveal>
 
@@ -85,7 +80,7 @@ export function InviteCard({
 
         <Reveal delay={200} className="mt-10 text-sm text-muted-foreground space-y-1">
           <p>Cerimônia na {WEDDING.ceremony.name}</p>
-          <p>Festa logo em seguida, na {WEDDING.reception.name}</p>
+          <p>Festa logo em seguida, no espaço de festa {WEDDING.reception.name}</p>
         </Reveal>
       </section>
 
