@@ -36,11 +36,12 @@ const RENOMEAR = {
   "SGF_2158.jpg": "nossa-historia.webp",
   "unnamed.webp": "capela.webp",
   "arya-eventos.jpg": "arya-eventos.webp",
+  "SGF_2194 (1).jpg": "abertura.webp",
 }
 
 const PERFIL_POR_PASTA = { "": CARD, carrocel: FOTO, gifts: PRESENTE }
-/** Na raiz, essas duas são fotos grandes e não cards. */
-const FOTOS_NA_RAIZ = new Set(["hero.webp", "nossa-historia.webp"])
+/** Na raiz, essas fotos são grandes e não cards. */
+const FOTOS_NA_RAIZ = new Set(["hero.webp", "nossa-historia.webp", "abertura.webp"])
 
 const existe = async (p) => access(p).then(() => true).catch(() => false)
 

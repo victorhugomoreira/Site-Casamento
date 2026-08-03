@@ -38,7 +38,19 @@ export function InviteCard({
 
   return (
     <main className="bg-background">
-      {/* ---------- Abertura ---------- */}
+      {/* ---------- Foto de abertura ---------- */}
+      <Reveal className="relative w-full aspect-[2/3] bg-secondary">
+        <Image
+          src="/images/abertura.webp"
+          alt={WEDDING.couple}
+          fill
+          sizes="100vw"
+          priority
+          className="object-cover grayscale"
+        />
+      </Reveal>
+
+      {/* ---------- Texto de abertura ---------- */}
       <section className="px-6 pt-16 pb-14 md:pt-24 md:pb-20 text-center">
         <Reveal>
           <p className="italic text-foreground/70 text-sm md:text-base max-w-sm mx-auto leading-relaxed text-balance">
@@ -78,7 +90,8 @@ export function InviteCard({
           </div>
         </Reveal>
 
-        <Reveal delay={200} className="mt-10 text-sm text-muted-foreground space-y-1">
+        <Reveal delay={
+        200} className="mt-10 text-sm text-muted-foreground space-y-1">
           <p>Cerimônia na {WEDDING.ceremony.name}</p>
           <p>Festa logo em seguida, no espaço de festa {WEDDING.reception.name}</p>
         </Reveal>
