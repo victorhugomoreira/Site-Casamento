@@ -95,6 +95,23 @@ function parseDoc(raw: unknown): { type: "CPF" | "CNPJ"; number: string } | null
 /** Validade da cobrança PIX. */
 const EXPIRES_IN_MINUTES = 30
 
+/**
+ * Quantos QR Codes um mesmo IP pode gerar a cada 10 minutos.
+ *
+ * Ninguém consegue roubar por aqui (o valor vem de `gifts`), mas sem limite dá
+ * para chamar em looping e encher a conta do Mercado Pago de cobranças
+ * pendentes. 10 é folgado para um convidado que erra o CPF e tenta de novo.
+ */
+const LIMITE_POR_IP = 10
+const JANELA_SEGUNDOS = 600
+
+/** Atrás do gateway do Supabase, o IP real é o primeiro do x-forwarded-for. */
+function ipDeQuemChamou(req: Request) {
+  const encaminhado = req.headers.get("x-forwarded-for")
+  if (encaminhado) return encaminhado.split(",")[0].trim()
+  return req.headers.get("x-real-ip") ?? "desconhecido"
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders })
@@ -126,6 +143,20 @@ Deno.serve(async (req) => {
       supabaseUrl,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     )
+
+    // Limite por IP. Se o contador falhar, deixa passar: um problema no
+    // controle de abuso não pode impedir alguém de presentear.
+    const { data: liberado } = await supabase.rpc("rate_limit_hit", {
+      p_bucket: `pix:${ipDeQuemChamou(req)}`,
+      p_limit: LIMITE_POR_IP,
+      p_window_seconds: JANELA_SEGUNDOS,
+    })
+    if (liberado === false) {
+      return json(
+        { error: "Muitas cobranças geradas seguidas. Aguarde alguns minutos." },
+        429,
+      )
+    }
 
     // 1) Busca o presente no banco — fonte da verdade do valor.
     const { data: gift, error: giftError } = await supabase

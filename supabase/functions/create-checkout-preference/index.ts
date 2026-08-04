@@ -52,6 +52,21 @@ function siteOriginFrom(req: Request) {
   return "https://brunaevictorhugo.vercel.app"
 }
 
+/**
+ * Quantas cobranças de cartão um mesmo IP pode abrir a cada 10 minutos.
+ * O valor vem de `gifts`, então não há como roubar por aqui — o limite é
+ * contra encher a conta do Mercado Pago de preferências à toa.
+ */
+const LIMITE_POR_IP = 10
+const JANELA_SEGUNDOS = 600
+
+/** Atrás do gateway do Supabase, o IP real é o primeiro do x-forwarded-for. */
+function ipDeQuemChamou(req: Request) {
+  const encaminhado = req.headers.get("x-forwarded-for")
+  if (encaminhado) return encaminhado.split(",")[0].trim()
+  return req.headers.get("x-real-ip") ?? "desconhecido"
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders })
@@ -83,6 +98,20 @@ Deno.serve(async (req) => {
       supabaseUrl,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     )
+
+    // Limite por IP. Se o contador falhar, deixa passar: um problema no
+    // controle de abuso não pode impedir alguém de presentear.
+    const { data: liberado } = await supabase.rpc("rate_limit_hit", {
+      p_bucket: `cartao:${ipDeQuemChamou(req)}`,
+      p_limit: LIMITE_POR_IP,
+      p_window_seconds: JANELA_SEGUNDOS,
+    })
+    if (liberado === false) {
+      return json(
+        { error: "Muitas cobranças geradas seguidas. Aguarde alguns minutos." },
+        429,
+      )
+    }
 
     // 1) Busca o presente no banco — fonte da verdade do valor.
     const { data: gift, error: giftError } = await supabase

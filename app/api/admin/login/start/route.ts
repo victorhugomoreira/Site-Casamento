@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { dentroDoLimite, ipDeQuemChamou } from "@/lib/rate-limit"
 import {
   COOKIE_DESAFIO,
   DESAFIO_MINUTOS,
@@ -15,6 +16,14 @@ import {
 export const runtime = "nodejs"
 
 /**
+ * Tentativas por IP a cada 15 min, somando todos os e-mails.
+ * O bloqueio de 5 erros é por e-mail; este limite fecha a brecha de ficar
+ * trocando de e-mail para nunca estourar aquele contador.
+ */
+const LIMITE_POR_IP = 15
+const JANELA_SEGUNDOS = 900
+
+/**
  * Etapa 1 do login do admin: confere a senha e dispara o código por e-mail.
  *
  * A senha é validada AQUI no servidor, com um client descartável — a sessão
@@ -23,6 +32,14 @@ export const runtime = "nodejs"
  * senha não entra no painel.
  */
 export async function POST(request: Request) {
+  const ip = ipDeQuemChamou(request)
+  if (!(await dentroDoLimite(`admin-login:${ip}`, LIMITE_POR_IP, JANELA_SEGUNDOS))) {
+    return NextResponse.json(
+      { error: "Muitas tentativas deste dispositivo. Aguarde alguns minutos.", bloqueado: true },
+      { status: 429 },
+    )
+  }
+
   let email = ""
   let password = ""
   try {

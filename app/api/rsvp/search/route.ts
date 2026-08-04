@@ -1,14 +1,30 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { dentroDoLimite, ipDeQuemChamou } from "@/lib/rate-limit"
 import type { PublicHousehold } from "@/lib/supabase/types"
 
 export const runtime = "nodejs"
 
+/** Buscas por minuto, por IP. Folgado para uma pessoa, apertado para um robô. */
+const LIMITE = 30
+const JANELA_SEGUNDOS = 60
+
 /**
  * Busca pública por nome. Passa pela service_role (RLS trancada) e devolve
  * apenas dados mínimos da casa — sem telefone e sem expor a lista inteira.
+ *
+ * Sem login, porque o convidado não tem conta. O limite por IP é o que impede
+ * varrer o alfabeto e baixar a lista de convidados inteira.
  */
 export async function POST(request: Request) {
+  const ip = ipDeQuemChamou(request)
+  if (!(await dentroDoLimite(`rsvp-busca:${ip}`, LIMITE, JANELA_SEGUNDOS))) {
+    return NextResponse.json(
+      { error: "Muitas buscas seguidas. Aguarde um minuto e tente de novo." },
+      { status: 429 },
+    )
+  }
+
   let query = ""
   try {
     const body = await request.json()

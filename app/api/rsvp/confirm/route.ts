@@ -1,7 +1,15 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { dentroDoLimite, ipDeQuemChamou } from "@/lib/rate-limit"
 
 export const runtime = "nodejs"
+
+/**
+ * Confirmações por IP a cada 10 min. Uma casa confirma uma vez e às vezes
+ * corrige — 15 cobre a família inteira mexendo do mesmo wi-fi.
+ */
+const LIMITE = 15
+const JANELA_SEGUNDOS = 600
 
 /**
  * Confirma (ou recusa) presença de uma casa. Aceita householdId OU token.
@@ -9,6 +17,14 @@ export const runtime = "nodejs"
  * Idempotente — a casa pode reconfirmar/alterar depois.
  */
 export async function POST(request: Request) {
+  const ip = ipDeQuemChamou(request)
+  if (!(await dentroDoLimite(`rsvp-confirma:${ip}`, LIMITE, JANELA_SEGUNDOS))) {
+    return NextResponse.json(
+      { error: "Muitas confirmações seguidas. Aguarde alguns minutos." },
+      { status: 429 },
+    )
+  }
+
   let body: {
     householdId?: string
     token?: string
