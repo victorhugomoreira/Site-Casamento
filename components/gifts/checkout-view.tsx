@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
   ArrowLeft,
   Gift as GiftIcon,
@@ -33,43 +33,19 @@ type PixData = {
 /** De quanto em quanto tempo perguntamos ao Supabase se o PIX já caiu. */
 const POLL_MS = 5000
 
-/** Formato que o Card Payment Brick devolve no onSubmit. */
-type CardFormData = {
-  token: string
-  issuer_id?: string
-  payment_method_id: string
-  installments: number
-  payer: {
-    email: string
-    identification: { type: string; number: string }
-  }
+/** O que a tela mostra depois que o convidado volta do Checkout Pro. */
+type CardReturn = {
+  status: string
+  paid: boolean
+  amount: number
+  gift_name: string | null
 }
-
-type CardBrickController = { unmount: () => void }
 
 declare global {
   interface Window {
     /** Preenchido pelo security.js do Mercado Pago. */
     MP_DEVICE_SESSION_ID?: string
-    /** Disponível depois que o SDK do Mercado Pago (v2) termina de carregar. */
-    MercadoPago?: new (publicKey: string, options?: { locale?: string }) => {
-      bricks: () => {
-        create: (
-          type: "cardPayment",
-          containerId: string,
-          settings: Record<string, unknown>,
-        ) => Promise<CardBrickController>
-      }
-    }
   }
-}
-
-type CardResult = {
-  payment_id: string
-  status: string
-  status_detail: string | null
-  paid: boolean
-  amount: number
 }
 
 const onlyDigits = (s: string) => s.replace(/\D/g, "")
@@ -119,14 +95,14 @@ export function CheckoutView({ gift }: { gift: Gift }) {
   // O Mercado Pago exige nome e CPF do pagador para liberar a cobrança PIX.
   const canGenerate = payerName.trim().length > 2 && isValidCpf(payerDoc)
 
-  // ---------- Cartão de crédito (Card Payment Brick) ----------
-  const [sdkReady, setSdkReady] = useState(false)
-  const [cardStatus, setCardStatus] = useState<
-    "idle" | "processing" | "approved" | "in_process" | "rejected"
-  >("idle")
+  // ---------- Cartão de crédito (Checkout Pro) ----------
+  // O convidado é redirecionado pra uma página do PRÓPRIO Mercado Pago pra
+  // digitar o cartão — nenhum dado de cartão passa pelo nosso site.
+  const [cardLoading, setCardLoading] = useState(false)
   const [cardError, setCardError] = useState<string | null>(null)
-  const [cardResult, setCardResult] = useState<CardResult | null>(null)
-  const brickRef = useRef<CardBrickController | null>(null)
+  /** True só na primeira renderização, enquanto conferimos se acabamos de voltar do MP. */
+  const [checkingReturn, setCheckingReturn] = useState(true)
+  const [cardReturn, setCardReturn] = useState<CardReturn | null>(null)
 
   async function generatePix() {
     setError(null)
@@ -165,6 +141,25 @@ export function CheckoutView({ gift }: { gift: Gift }) {
     }
   }
 
+  // Cria a preference no Checkout Pro e manda o convidado pra lá.
+  async function payWithCard() {
+    setCardError(null)
+    setCardLoading(true)
+    try {
+      const { data, error } = await supabase.functions.invoke("create-checkout-preference", {
+        body: { gift_id: gift.id, payer_email: payerEmail || undefined },
+      })
+      if (error) throw error
+      if (data?.error) throw new Error(data.error)
+      window.location.href = data.init_point as string
+    } catch (e) {
+      setCardError(
+        e instanceof Error ? e.message : "Não foi possível iniciar o pagamento. Tente novamente.",
+      )
+      setCardLoading(false)
+    }
+  }
+
   // O security.js do Mercado Pago preenche window.MP_DEVICE_SESSION_ID, que o
   // antifraude deles usa para não recusar pagamento legítimo. Injetamos na mão
   // porque o next/script não aceita o atributo `view` que o script exige.
@@ -176,102 +171,43 @@ export function CheckoutView({ gift }: { gift: Gift }) {
     return () => el.remove()
   }, [])
 
-  // SDK do Card Payment Brick. Carregado uma vez, independente do método
-  // escolhido, para já estar pronto quando o convidado clicar em "Cartão".
+  // Se a URL tem `external_reference` (o Mercado Pago sempre devolve isso nas
+  // back_urls do Checkout Pro), acabamos de voltar de lá — confere o status
+  // dessa cobrança e mostra o resultado, em vez do botão de pagar de novo.
   useEffect(() => {
-    if (window.MercadoPago) {
-      setSdkReady(true)
+    const externalReference = new URLSearchParams(window.location.search).get(
+      "external_reference",
+    )
+    if (!externalReference) {
+      setCheckingReturn(false)
       return
     }
-    const el = document.createElement("script")
-    el.src = "https://sdk.mercadopago.com/js/v2"
-    el.onload = () => setSdkReady(true)
-    document.body.appendChild(el)
-    return () => el.remove()
-  }, [])
 
-  // Manda o cartão já tokenizado (nunca os dados crus) para a Edge Function,
-  // que relê o preço no banco e cria a cobrança no Mercado Pago.
-  const submitCardPayment = useCallback(
-    async (cardFormData: CardFormData) => {
-      const { token, issuer_id, payment_method_id, installments, payer } = cardFormData
-      const { data, error } = await supabase.functions.invoke("create-card-payment", {
-        body: {
-          gift_id: gift.id,
-          token,
-          issuer_id,
-          payment_method_id,
-          installments,
-          payer,
-          device_id: window.MP_DEVICE_SESSION_ID,
-        },
-      })
-      if (error) throw error
-      if (data?.error) throw new Error(data.error)
-      return data as CardResult
-    },
-    [gift.id, supabase],
-  )
-
-  // Renderiza o formulário de cartão sempre que ele precisa aparecer — na
-  // primeira vez e de novo a cada "Tentar novamente" (cardStatus volta a "idle").
-  useEffect(() => {
-    if (method !== "card" || !sdkReady || cardStatus !== "idle") return
-
+    setMethod("card")
     let cancelled = false
     void (async () => {
-      const publicKey = process.env.NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY
-      if (!publicKey) {
-        setCardError("Pagamento por cartão não configurado.")
-        return
-      }
-      const mp = new window.MercadoPago!(publicKey, { locale: "pt-BR" })
-      const controller = await mp.bricks().create("cardPayment", "card-payment-brick", {
-        initialization: { amount: gift.price },
-        customization: { paymentMethods: { maxInstallments: 1 } },
-        callbacks: {
-          onReady: () => {},
-          onError: () => {
-            if (!cancelled) {
-              setCardError("Não foi possível carregar o formulário de cartão. Recarregue a página.")
-            }
-          },
-          onSubmit: async (cardFormData: CardFormData) => {
-            setCardError(null)
-            setCardStatus("processing")
-            try {
-              const result = await submitCardPayment(cardFormData)
-              if (cancelled) return
-              setCardResult(result)
-              if (result.paid) setCardStatus("approved")
-              else if (result.status === "in_process" || result.status === "pending") {
-                setCardStatus("in_process")
-              } else {
-                setCardStatus("rejected")
-              }
-            } catch (e) {
-              if (cancelled) return
-              setCardError(
-                e instanceof Error ? e.message : "Não foi possível processar o cartão.",
-              )
-              setCardStatus("rejected")
-            }
-          },
-        },
+      const { data } = await supabase.functions.invoke("pix-payment-status", {
+        body: { payment_id: externalReference },
       })
-      if (cancelled) {
-        controller.unmount()
-        return
+      if (!cancelled && data && !data.error) {
+        setCardReturn({
+          status: String(data.status),
+          paid: !!data.paid,
+          amount: Number(data.amount ?? gift.price),
+          gift_name: data.gift_name ?? gift.name,
+        })
       }
-      brickRef.current = controller
+      if (!cancelled) setCheckingReturn(false)
+      // Limpa a URL para não reprocessar isso se o convidado atualizar a página.
+      window.history.replaceState(null, "", window.location.pathname)
     })()
 
     return () => {
       cancelled = true
-      brickRef.current?.unmount()
-      brickRef.current = null
     }
-  }, [method, sdkReady, cardStatus, gift.price, submitCardPayment])
+    // Só na primeira renderização — é a URL com que a página abriu que importa.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Se este navegador já gerou uma cobrança para este presente e ela ainda
   // vale, recupera o QR em vez de deixar o convidado gerar outra à toa.
@@ -578,17 +514,22 @@ export function CheckoutView({ gift }: { gift: Gift }) {
           </div>
         )}
 
-        {/* Painel Cartão */}
+        {/* Painel Cartão (Checkout Pro — o convidado paga numa página do Mercado Pago) */}
         {method === "card" && (
           <div className="bg-card rounded-lg border border-border shadow-sm p-6">
-            {cardStatus === "approved" && cardResult ? (
+            {checkingReturn ? (
+              <div className="flex items-center justify-center gap-3 py-8 text-muted-foreground">
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span className="text-sm">Confirmando o pagamento...</span>
+              </div>
+            ) : cardReturn?.paid ? (
               <div className="text-center space-y-3 py-4">
                 <CheckCircle2 className="w-14 h-14 text-primary mx-auto" />
                 <h3 className="text-2xl font-medium text-foreground">
                   Pagamento confirmado!
                 </h3>
                 <p className="text-2xl font-semibold text-primary">
-                  R$ {formatPriceExact(cardResult.amount ?? gift.price)}
+                  R$ {formatPriceExact(cardReturn.amount ?? gift.price)}
                 </p>
                 <p className="text-sm text-muted-foreground max-w-md mx-auto">
                   Recebemos o seu presente e não temos palavras para agradecer. Ver
@@ -601,7 +542,7 @@ export function CheckoutView({ gift }: { gift: Gift }) {
                   Voltar para a lista
                 </Link>
               </div>
-            ) : cardStatus === "in_process" ? (
+            ) : cardReturn && (cardReturn.status === "in_process" || cardReturn.status === "pending") ? (
               <div className="text-center space-y-3 py-4">
                 <Clock className="w-12 h-12 text-muted-foreground mx-auto" />
                 <p className="text-foreground font-medium">Pagamento em análise</p>
@@ -610,40 +551,42 @@ export function CheckoutView({ gift }: { gift: Gift }) {
                   noivos são avisados — não precisa tentar de novo.
                 </p>
               </div>
-            ) : cardStatus === "rejected" ? (
+            ) : cardReturn ? (
               <div className="text-center space-y-3 py-4">
                 <XCircle className="w-12 h-12 text-destructive mx-auto" />
                 <p className="text-foreground font-medium">Não foi possível aprovar o cartão</p>
                 <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                  {cardError ?? "O cartão foi recusado. Confira os dados ou tente outro cartão."}
+                  O cartão foi recusado pelo Mercado Pago. Confira os dados ou tente outro cartão.
                 </p>
                 <button
-                  onClick={() => {
-                    setCardError(null)
-                    setCardResult(null)
-                    setCardStatus("idle")
-                  }}
+                  onClick={() => setCardReturn(null)}
                   className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-3 rounded-md hover:bg-accent transition-colors font-medium"
                 >
                   Tentar novamente
                 </button>
               </div>
             ) : (
-              <div className="space-y-4">
-                {!sdkReady && (
-                  <div className="flex items-center justify-center gap-3 py-8 text-muted-foreground">
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    <span className="text-sm">Carregando formulário de cartão...</span>
-                  </div>
-                )}
+              <div className="text-center space-y-4">
+                <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                  Você será levado para uma página segura do Mercado Pago para digitar os
+                  dados do cartão — nenhum dado de cartão passa pelo nosso site. Depois do
+                  pagamento, você volta pra cá automaticamente.
+                </p>
+
                 {cardError && <p className="text-sm text-destructive">{cardError}</p>}
-                <div id="card-payment-brick" />
-                {cardStatus === "processing" && (
-                  <p className="inline-flex items-center gap-2 text-xs text-muted-foreground">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Processando pagamento...
-                  </p>
-                )}
+
+                <button
+                  onClick={payWithCard}
+                  disabled={cardLoading}
+                  className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-3 rounded-md hover:bg-accent transition-colors font-medium disabled:opacity-60"
+                >
+                  {cardLoading ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <CreditCard className="w-5 h-5" />
+                  )}
+                  {cardLoading ? "Preparando pagamento..." : "Pagar com cartão de crédito"}
+                </button>
               </div>
             )}
           </div>
