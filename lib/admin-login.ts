@@ -110,3 +110,62 @@ export async function bloquearAgora(email: string) {
 export function minutosRestantes(liberaEm: Date) {
   return Math.max(1, Math.ceil((liberaEm.getTime() - Date.now()) / 60_000))
 }
+
+// ---------------------------------------------------------------------------
+// Validade da sessão do painel
+// ---------------------------------------------------------------------------
+
+/** Depois disso o admin loga de novo, mesmo que esteja usando o painel. */
+export const SESSAO_MAX_HORAS = 5
+
+/**
+ * Lê o `session_id` de dentro do access token.
+ *
+ * Não valida assinatura de propósito: quem chama isto já rodou `getUser()`,
+ * que confere o token no servidor do Supabase. Aqui só precisamos do id que
+ * está no payload para consultar a idade da sessão no banco.
+ */
+export function idDaSessao(accessToken: string): string | null {
+  try {
+    const payload = accessToken.split(".")[1]
+    if (!payload) return null
+    const json = JSON.parse(
+      Buffer.from(payload.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString(),
+    )
+    return typeof json?.session_id === "string" ? json.session_id : null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Diz se a sessão passou da validade e, nesse caso, já a apaga.
+ *
+ * Sessão inexistente também conta como vencida: significa que outro login a
+ * derrubou (só a mais recente vale).
+ */
+export async function sessaoVencida(sessionId: string): Promise<boolean> {
+  const admin = createAdminClient()
+  const { data: minutos, error } = await admin.rpc("admin_idade_sessao_minutos", {
+    p_session_id: sessionId,
+  })
+
+  // Erro de consulta não pode expulsar ninguém do painel sem motivo.
+  if (error) return false
+  if (minutos === null || minutos === undefined) return true
+
+  if (Number(minutos) >= SESSAO_MAX_HORAS * 60) {
+    await admin.rpc("admin_encerrar_sessao", { p_session_id: sessionId })
+    return true
+  }
+  return false
+}
+
+/** Deixa só esta sessão de pé, derrubando as anteriores do mesmo admin. */
+export async function manterSomenteEstaSessao(userId: string, sessionId: string) {
+  const admin = createAdminClient()
+  await admin.rpc("admin_manter_somente_sessao", {
+    p_user_id: userId,
+    p_session_id: sessionId,
+  })
+}

@@ -6,7 +6,9 @@ import {
   COOKIE_DESAFIO,
   MAX_TENTATIVAS,
   bloquearAgora,
+  idDaSessao,
   limparBloqueio,
+  manterSomenteEstaSessao,
 } from "@/lib/admin-login"
 
 export const runtime = "nodejs"
@@ -60,7 +62,7 @@ export async function POST(request: Request) {
   // Confere o código no Supabase pelo client de sessão: se der certo, os
   // cookies do painel já saem gravados nesta resposta.
   const supabase = await createClient()
-  const { error: erroOtp } = await supabase.auth.verifyOtp({
+  const { data: sessaoNova, error: erroOtp } = await supabase.auth.verifyOtp({
     email: desafio.email,
     token: codigo,
     type: "email",
@@ -101,6 +103,15 @@ export async function POST(request: Request) {
     .from("admin_login_challenges")
     .update({ consumed_at: new Date().toISOString() })
     .eq("id", desafio.id)
+
+  // Só a sessão recém-criada vale: derruba as anteriores. Assim, um token que
+  // tenha vazado antes para de funcionar assim que o dono entra de novo.
+  const token = sessaoNova?.session?.access_token
+  const userId = sessaoNova?.user?.id
+  const sessionId = token ? idDaSessao(token) : null
+  if (userId && sessionId) {
+    await manterSomenteEstaSessao(userId, sessionId)
+  }
 
   await limparBloqueio(desafio.email)
   jar.delete(COOKIE_DESAFIO)

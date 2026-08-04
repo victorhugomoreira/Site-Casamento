@@ -22,7 +22,13 @@ function LoginForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [codigo, setCodigo] = useState("")
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(
+    // Chega assim quando o painel encerra a sessão por tempo (ou porque outro
+    // login a derrubou), para não parecer que o site deslogou sozinho.
+    params.get("expirada")
+      ? "Sua sessão expirou por segurança. Entre novamente."
+      : null,
+  )
   const [loading, setLoading] = useState(false)
 
   function voltarParaSenha(mensagem?: string) {
