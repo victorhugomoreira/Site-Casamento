@@ -22,21 +22,35 @@ O que liga uma etapa à outra é um cookie `httpOnly` com o id de um registro em
 
 ---
 
-## Passo 1 — Deixar o código com 8 dígitos
+## Passo 1 — SMTP próprio (faça primeiro: destrava os outros dois)
 
-Painel do Supabase → **Authentication → Emails** → campo **OTP Length**: troque
-de `6` para **`8`** e salve. (O Supabase aceita de 6 a 10.)
+Em **03/06/2026** o Supabase passou a proibir editar template de e-mail em
+projeto free no SMTP embutido (havia gente reescrevendo o template de auth com
+phishing e disparando pela infra deles). Projetos criados antes daquela data
+foram poupados; **este é de 20/07/2026**, então a regra vale.
 
-Sem isso o login continua funcionando, só que com 6 dígitos — o campo da tela
-aceita os dois.
+Consequência prática: sem SMTP próprio o template fica travado no padrão, que
+manda **só um link e nenhum código** — e aí a etapa 2 é impossível de concluir.
 
-## Passo 2 — Fazer o e-mail mostrar o código (obrigatório)
+Com uma conta no [Resend](https://resend.com) (3.000 e-mails/mês no free), pegue
+uma API key e preencha em **Project Settings → Authentication → SMTP Settings**:
 
-Por padrão o e-mail de "Magic Link" do Supabase manda **só um link**, sem o
-código. Assim a etapa 2 fica impossível de concluir.
+| Campo | Valor |
+| --- | --- |
+| Host | `smtp.resend.com` |
+| Port | `465` |
+| Username | `resend` |
+| Password | a API key (`re_...`) |
+| Sender email | `onboarding@resend.dev` |
+| Sender name | `Bruna & Victor Hugo` |
 
-Painel do Supabase → **Authentication → Emails → Magic Link** e garanta que o
-template tem `{{ .Token }}`. Por exemplo:
+> Sem domínio verificado, o Resend só entrega para o e-mail da própria conta.
+> Como o código só vai para o admin, isso não atrapalha — mas se um dia outra
+> pessoa também for receber código, verifique um domínio antes.
+
+## Passo 2 — Fazer o e-mail mostrar o código
+
+Painel do Supabase → **Authentication → Emails → Magic Link**:
 
 ```html
 <h2>Seu código de acesso</h2>
@@ -45,16 +59,16 @@ template tem `{{ .Token }}`. Por exemplo:
 <p>Ele vale por 10 minutos. Se não foi você que pediu, ignore este e-mail.</p>
 ```
 
-> Deixe o `{{ .Token }}` — é ele que vira o código. Pode remover o link.
+**Não deixe o `{{ .ConfirmationURL }}` no template.** Aquele link entra no painel
+sozinho, sem passar pela senha — ou seja, anula a verificação em duas etapas.
+Dá para conferir no token que ele gera: vem com `"amr":[{"method":"otp"}]`,
+sem rastro da etapa da senha. O que queremos é só o `{{ .Token }}`.
 
-## Passo 3 — SMTP próprio (antes de usar de verdade)
+## Passo 3 — Deixar o código com 8 dígitos
 
-O SMTP embutido do Supabase é só para desenvolvimento: poucos e-mails por hora
-e sem garantia de entrega. Painel → **Project Settings → Authentication → SMTP
-Settings** e aponte para um provedor seu.
-
-Enquanto isso não for feito, um bloqueio de 15 minutos somado ao limite de
-e-mails pode deixar você sem conseguir entrar.
+Na mesma tela, campo **OTP Length**: troque `6` por **`8`** e salve (aceita de
+6 a 10). O campo da tela de login aceita os dois tamanhos, então isso é só para
+ficar como foi pedido.
 
 ---
 
