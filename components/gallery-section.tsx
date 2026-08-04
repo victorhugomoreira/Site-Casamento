@@ -108,7 +108,11 @@ export function GallerySection({ images }: { images: GalleryImage[] }) {
           aria-label="Galeria de fotos"
         >
           <div
-            className="flex touch-pan-y cursor-grab active:cursor-grabbing"
+            // h-full é essencial: os slides usam `h-full` e, sem altura aqui, a
+            // porcentagem resolve contra `auto`. Como a única coisa dentro do
+            // slide é um next/image com `fill` (absoluto, fora do fluxo), não
+            // há conteúdo para esticar nada e o carrossel inteiro vira 0px.
+            className="flex h-full touch-pan-y cursor-grab active:cursor-grabbing"
             style={{
               transform: `translateX(calc(-${current * 100}% + ${dragOffset}px))`,
               transition: dragStartX.current === null ? "transform 500ms ease" : "none",
