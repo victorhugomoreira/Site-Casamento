@@ -164,6 +164,7 @@ Deno.serve(async (req) => {
         gift_name: gift.name,
         amount,
         status: "creating",
+        payment_method: "pix",
         payer_name: name || null,
         payer_email: email,
         message: note,

@@ -52,6 +52,8 @@ export interface Payment {
   mp_payment_id: string | null
   status: string
   status_detail: string | null
+  /** "pix" ou "card" — null em pagamentos criados antes dessa coluna existir. */
+  payment_method: string | null
   amount: number
   payer_name: string | null
   payer_email: string | null

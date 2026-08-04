@@ -1,7 +1,19 @@
-import { Gift as GiftIcon, Clock, Wallet, Undo2 } from "lucide-react"
+import { Gift as GiftIcon, Clock, Wallet, Undo2, QrCode, CreditCard } from "lucide-react"
 import { formatPriceExact } from "@/lib/format"
 import { RefundButton } from "@/components/admin/refund-button"
 import type { Payment } from "@/lib/supabase/types"
+
+/** Selo pequeno indicando se a cobrança foi por PIX ou cartão. */
+function MethodBadge({ method }: { method: string | null }) {
+  const isCard = method === "card"
+  const Icon = isCard ? CreditCard : QrCode
+  return (
+    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+      <Icon className="w-3.5 h-3.5" />
+      {isCard ? "Cartão" : "PIX"}
+    </span>
+  )
+}
 
 /** "2026-07-30T03:12:00Z" -> "30/07 às 00:12" (horário de Brasília). */
 function formatMoment(iso: string) {
@@ -97,6 +109,7 @@ export function PaymentsReceived({
                 <tr>
                   <th className="text-left font-medium px-5 py-3">Quando</th>
                   <th className="text-left font-medium px-5 py-3">Presente</th>
+                  <th className="text-left font-medium px-5 py-3">Método</th>
                   <th className="text-left font-medium px-5 py-3">Quem presenteou</th>
                   <th className="text-right font-medium px-5 py-3">Valor</th>
                   <th className="text-right font-medium px-5 py-3 w-px"></th>
@@ -109,6 +122,9 @@ export function PaymentsReceived({
                       {formatMoment(p.paid_at ?? p.created_at)}
                     </td>
                     <td className="px-5 py-3 text-foreground">{p.gift_name ?? "—"}</td>
+                    <td className="px-5 py-3">
+                      <MethodBadge method={p.payment_method} />
+                    </td>
                     <td className="px-5 py-3">
                       <span className="text-foreground">{p.payer_name ?? "Anônimo"}</span>
                       {p.payer_email && (
@@ -155,7 +171,8 @@ export function PaymentsReceived({
               <li key={p.id} className="px-5 py-3 flex items-center justify-between gap-4">
                 <div className="min-w-0">
                   <p className="text-foreground truncate">{p.gift_name ?? "—"}</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground flex items-center gap-2">
+                    <MethodBadge method={p.payment_method} />
                     {p.payer_name ?? "Anônimo"} · {formatMoment(p.created_at)}
                   </p>
                 </div>
@@ -184,7 +201,8 @@ export function PaymentsReceived({
               <li key={p.id} className="px-5 py-3 flex items-center justify-between gap-4">
                 <div className="min-w-0">
                   <p className="text-foreground truncate">{p.gift_name ?? "—"}</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground flex items-center gap-2">
+                    <MethodBadge method={p.payment_method} />
                     {p.payer_name ?? "Anônimo"} · gerado {formatMoment(p.created_at)}
                   </p>
                 </div>

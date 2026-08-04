@@ -147,7 +147,11 @@ export function CheckoutView({ gift }: { gift: Gift }) {
     setCardLoading(true)
     try {
       const { data, error } = await supabase.functions.invoke("create-checkout-preference", {
-        body: { gift_id: gift.id, payer_email: payerEmail || undefined },
+        body: {
+          gift_id: gift.id,
+          payer_name: payerName.trim(),
+          payer_email: payerEmail || undefined,
+        },
       })
       if (error) throw error
       if (data?.error) throw new Error(data.error)
@@ -566,27 +570,47 @@ export function CheckoutView({ gift }: { gift: Gift }) {
                 </button>
               </div>
             ) : (
-              <div className="text-center space-y-4">
-                <p className="text-sm text-muted-foreground max-w-md mx-auto">
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
                   Você será levado para uma página segura do Mercado Pago para digitar os
                   dados do cartão — nenhum dado de cartão passa pelo nosso site. Depois do
                   pagamento, você volta pra cá automaticamente.
                 </p>
 
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <input
+                    value={payerName}
+                    onChange={(e) => setPayerName(e.target.value)}
+                    placeholder="Seu nome completo"
+                    autoComplete="name"
+                    className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  />
+                  <input
+                    type="email"
+                    value={payerEmail}
+                    onChange={(e) => setPayerEmail(e.target.value)}
+                    placeholder="Seu e-mail (opcional)"
+                    autoComplete="email"
+                    className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  />
+                </div>
+
                 {cardError && <p className="text-sm text-destructive">{cardError}</p>}
 
-                <button
-                  onClick={payWithCard}
-                  disabled={cardLoading}
-                  className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-3 rounded-md hover:bg-accent transition-colors font-medium disabled:opacity-60"
-                >
-                  {cardLoading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <CreditCard className="w-5 h-5" />
-                  )}
-                  {cardLoading ? "Preparando pagamento..." : "Pagar com cartão de crédito"}
-                </button>
+                <div className="text-center">
+                  <button
+                    onClick={payWithCard}
+                    disabled={cardLoading || payerName.trim().length < 2}
+                    className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-3 rounded-md hover:bg-accent transition-colors font-medium disabled:opacity-60"
+                  >
+                    {cardLoading ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <CreditCard className="w-5 h-5" />
+                    )}
+                    {cardLoading ? "Preparando pagamento..." : "Pagar com cartão de crédito"}
+                  </button>
+                </div>
               </div>
             )}
           </div>

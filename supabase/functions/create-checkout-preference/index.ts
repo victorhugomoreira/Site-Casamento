@@ -29,6 +29,14 @@ function json(body: unknown, status = 200) {
   })
 }
 
+/** Quebra "Maria Silva Souza" em first/last name para o payer do Mercado Pago. */
+function splitName(full: string) {
+  const parts = full.trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return { first: undefined, last: undefined }
+  if (parts.length === 1) return { first: parts[0], last: undefined }
+  return { first: parts[0], last: parts.slice(1).join(" ") }
+}
+
 /**
  * De onde o convidado está chamando — usada pra montar as back_urls (pra
  * onde o Mercado Pago devolve o navegador depois do pagamento).
@@ -54,10 +62,15 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json().catch(() => ({}))
-    const { gift_id, payer_email } = body
+    const { gift_id, payer_name, payer_email } = body
 
     if (!gift_id || typeof gift_id !== "string") {
       return json({ error: "gift_id é obrigatório." }, 400)
+    }
+
+    const name = typeof payer_name === "string" ? payer_name.trim() : ""
+    if (name.length < 2) {
+      return json({ error: "Informe seu nome." }, 400)
     }
 
     const mpToken = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN")
@@ -96,6 +109,8 @@ Deno.serve(async (req) => {
         gift_name: gift.name,
         amount,
         status: "creating",
+        payment_method: "card",
+        payer_name: name,
         payer_email:
           typeof payer_email === "string" && payer_email.includes("@")
             ? payer_email
@@ -135,15 +150,30 @@ Deno.serve(async (req) => {
         external_reference: payment.id,
         notification_url: `${supabaseUrl}/functions/v1/mercadopago-webhook`,
         back_urls: { success: backUrl, pending: backUrl, failure: backUrl },
+        // O PIX já tem tela própria no site — aqui só interessa cartão, senão
+        // o convidado veria PIX/boleto de novo dentro do Checkout Pro.
+        payment_methods: {
+          excluded_payment_types: [
+            { id: "ticket" },
+            { id: "atm" },
+            { id: "bank_transfer" },
+            { id: "digital_wallet" },
+            { id: "digital_currency" },
+          ],
+        },
         // O Mercado Pago só aceita auto_return com back_url em HTTPS — em
         // localhost (testes) o convidado só perde o redirecionamento
         // automático e precisa clicar em "Voltar ao site" na página deles.
         ...(backUrl.startsWith("https://") ? { auto_return: "approved" } : {}),
         statement_descriptor: "CASAMENTO BEV",
-        payer:
-          typeof payer_email === "string" && payer_email.includes("@")
-            ? { email: payer_email }
-            : undefined,
+        payer: {
+          name: splitName(name).first,
+          surname: splitName(name).last,
+          email:
+            typeof payer_email === "string" && payer_email.includes("@")
+              ? payer_email
+              : undefined,
+        },
       }),
     })
 
