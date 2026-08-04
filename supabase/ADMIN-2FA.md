@@ -41,12 +41,17 @@ uma API key e preencha em **Project Settings → Authentication → SMTP Setting
 | Port | `465` |
 | Username | `resend` |
 | Password | a API key (`re_...`) |
-| Sender email | `onboarding@resend.dev` |
+| Sender email | `nao-responda@moreiraprodutosgraficos.pro` |
 | Sender name | `Bruna & Victor Hugo` |
 
-> Sem domínio verificado, o Resend só entrega para o e-mail da própria conta.
-> Como o código só vai para o admin, isso não atrapalha — mas se um dia outra
-> pessoa também for receber código, verifique um domínio antes.
+> O domínio `moreiraprodutosgraficos.pro` já está verificado no Resend
+> (região `sa-east-1`), então dá para enviar de qualquer endereço nele e para
+> qualquer destinatário — não precisa existir caixa postal em
+> `nao-responda@`, ela só assina a saída.
+>
+> Se um dia o domínio sair do ar, o caminho de emergência é voltar o remetente
+> para `onboarding@resend.dev` — só que aí o Resend passa a entregar apenas no
+> e-mail da própria conta.
 
 ## Passo 2 — Fazer o e-mail mostrar o código
 
