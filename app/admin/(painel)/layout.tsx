@@ -1,10 +1,19 @@
 import type { ReactNode } from "react"
+import { redirect } from "next/navigation"
 import { LogoutButton } from "@/components/admin/logout-button"
 import { AdminNav } from "@/components/admin/admin-nav"
+import { createClient } from "@/lib/supabase/server"
 
 export const dynamic = "force-dynamic"
 
-export default function PainelLayout({ children }: { children: ReactNode }) {
+export default async function PainelLayout({ children }: { children: ReactNode }) {
+  // O middleware já barrou quem não está logado. Falta o degrau de cima:
+  // estar logado não é ser admin. Sem isto, qualquer conta do projeto abriria
+  // o painel (as tabelas voltariam vazias pela RLS, mas a casca carregava).
+  const supabase = await createClient()
+  const { data: ehAdmin } = await supabase.rpc("is_admin")
+  if (!ehAdmin) redirect("/admin/login")
+
   return (
     <main className="min-h-screen bg-secondary">
       <header className="bg-card border-b border-border">

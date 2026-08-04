@@ -10,13 +10,21 @@ function normalize(name: string) {
 }
 
 export async function POST(request: Request) {
-  // 1) Exige admin autenticado
+  // 1) Exige admin de verdade — não apenas uma conta logada.
+  //    Daqui para baixo tudo roda com a service_role, que IGNORA a RLS: se
+  //    bastasse estar logado, qualquer conta do projeto sobrescreveria a
+  //    lista de convidados inteira.
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) {
     return NextResponse.json({ error: "Não autenticado." }, { status: 401 })
+  }
+
+  const { data: ehAdmin } = await supabase.rpc("is_admin")
+  if (!ehAdmin) {
+    return NextResponse.json({ error: "Sem permissão." }, { status: 403 })
   }
 
   // 2) Lê o arquivo enviado
